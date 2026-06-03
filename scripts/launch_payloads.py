@@ -1072,7 +1072,7 @@ def build_server_doc(state: EnvState, cfg: dict, event_type: str, selected_cars:
         "entry_list_server_url": state.string("SERVER_ENTRY_LIST_URL", "", allow_empty=True),
         "results_post_url": state.string("SERVER_RESULTS_POST_URL", "", allow_empty=True),
         "token": state.string("SERVER_RESULTS_TOKEN", "", allow_empty=True),
-        "tuning_allowed": tuning_type == "TuningAllowed",
+        "tuning_type": tuning_type,
         "entry_list_path": state.string("SERVER_ENTRY_LIST_PATH", "", allow_empty=True),
         "results_path": state.string("SERVER_RESULTS_PATH", "", allow_empty=True),
     }

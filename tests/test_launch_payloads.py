@@ -359,7 +359,7 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertEqual(server_doc["admin_password"], "admin-password")
         self.assertEqual(server_doc["results_post_url"], "https://results.example.test/launcher")
         self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_UNRANKED")
-        self.assertFalse(server_doc["tuning_allowed"])
+        self.assertEqual(server_doc["tuning_type"], "TuningDenied")
 
         cars = {car["car_name"]: car for car in server_doc["allowed_cars_list_full"]}
         self.assertEqual(set(cars), {"preset_695b_mech_1", "ks_caterham_acmd_mech_1"})
@@ -400,7 +400,7 @@ class LaunchPayloadTests(unittest.TestCase):
 
         self.assertEqual(warnings, [])
         self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_UNRANKED")
-        self.assertFalse(server_doc["tuning_allowed"])
+        self.assertEqual(server_doc["tuning_type"], "TuningDenied")
         self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "env")
         self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "env")
 
@@ -415,7 +415,7 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertTrue(any("SERVER_TYPE" in warning and "unknown value" in warning for warning in warnings))
         self.assertTrue(any("SERVER_TUNING_TYPE" in warning and "unknown value" in warning for warning in warnings))
         self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_RANKED")
-        self.assertTrue(server_doc["tuning_allowed"])
+        self.assertEqual(server_doc["tuning_type"], "TuningAllowed")
         self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "fallback")
         self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "fallback")
 
