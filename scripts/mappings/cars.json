@@ -2,7 +2,7 @@
   {
     "display_name": "Abarth 695 Biposto - Standard",
     "internal_name": "preset_695b_mech_1",
-    "performance_indicator": 9.9,
+    "performance_indicator": 10.2,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -10,7 +10,7 @@
   {
     "display_name": "Alfa Romeo 75 Turbo Evoluzione - Standard",
     "internal_name": "preset_75t_mech_1",
-    "performance_indicator": 8.2,
+    "performance_indicator": 8,
     "property_1": 0,
     "property_2": 1,
     "property_3": 0
@@ -18,7 +18,7 @@
   {
     "display_name": "Alfa Romeo Giulia GTAm - Standard",
     "internal_name": "preset_gtam_mech_1",
-    "performance_indicator": 13.4,
+    "performance_indicator": 12.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -26,7 +26,7 @@
   {
     "display_name": "Alfa Romeo Giulia Sprint GTA - Standard",
     "internal_name": "preset_sprintgta_mech_1",
-    "performance_indicator": 7.9,
+    "performance_indicator": 7.7,
     "property_1": 1,
     "property_2": 1,
     "property_3": 0
@@ -34,7 +34,7 @@
   {
     "display_name": "Alfa Romeo Junior - Elettrica 280 CV Veloce",
     "internal_name": "preset_mln_mech_1",
-    "performance_indicator": 10.9,
+    "performance_indicator": 10.5,
     "property_1": 0,
     "property_2": 0,
     "property_3": 1
@@ -42,7 +42,7 @@
   {
     "display_name": "Alpine A110 S - Aero Package",
     "internal_name": "preset_a110s_mech_1",
-    "performance_indicator": 12.3,
+    "performance_indicator": 12,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -50,10 +50,18 @@
   {
     "display_name": "Alpine A290 Beta - Standard",
     "internal_name": "preset_a290b_mech_1",
-    "performance_indicator": 10.2,
+    "performance_indicator": 9.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 1
+  },
+  {
+    "display_name": "Audi R8 LMS GT3 Evo II - GT3",
+    "internal_name": "preset_r8gt3_mech_1",
+    "performance_indicator": 20.6,
+    "property_1": 1,
+    "property_2": 0,
+    "property_3": 0
   },
   {
     "display_name": "Audi R8 LMS GT4 Evo - GT4",
@@ -90,7 +98,7 @@
   {
     "display_name": "BMW M2 Coupe - Performance",
     "internal_name": "preset_m2_mech_2",
-    "performance_indicator": 11.6,
+    "performance_indicator": 11.7,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -130,7 +138,7 @@
   {
     "display_name": "BMW M3 E46 CSL - Standard",
     "internal_name": "preset_e46csl_mech_1",
-    "performance_indicator": 10.3,
+    "performance_indicator": 10,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -146,7 +154,7 @@
   {
     "display_name": "BMW M4 GT3 Evo - GT3",
     "internal_name": "preset_m4gt3_mech_1",
-    "performance_indicator": 21.2,
+    "performance_indicator": 21.1,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -162,7 +170,7 @@
   {
     "display_name": "Caterham 485 CSR - Final Edition",
     "internal_name": "ks_caterham_485_csr_mech_3",
-    "performance_indicator": 10.7,
+    "performance_indicator": 7.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -170,7 +178,7 @@
   {
     "display_name": "Caterham 485 CSR - Road",
     "internal_name": "ks_caterham_485_csr_mech_1",
-    "performance_indicator": 10.7,
+    "performance_indicator": 7.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -178,7 +186,7 @@
   {
     "display_name": "Caterham 485 CSR - Track",
     "internal_name": "ks_caterham_485_csr_mech_2",
-    "performance_indicator": 10.7,
+    "performance_indicator": 7.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -218,7 +226,7 @@
   {
     "display_name": "Dallara Stradale - Coupe",
     "internal_name": "preset_dalsc_mech_1",
-    "performance_indicator": 19.0,
+    "performance_indicator": 19,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -226,7 +234,7 @@
   {
     "display_name": "Dallara Stradale - Spider",
     "internal_name": "preset_dalsc_mech_2",
-    "performance_indicator": 19.0,
+    "performance_indicator": 19,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -234,9 +242,25 @@
   {
     "display_name": "Dallara Stradale - Track",
     "internal_name": "preset_dalsc_mech_3",
-    "performance_indicator": 19.8,
+    "performance_indicator": 21.3,
     "property_1": 0,
     "property_2": 0,
+    "property_3": 0
+  },
+  {
+    "display_name": "Datsun 240Z (S30) - Standard",
+    "internal_name": "preset_240z_mech_1",
+    "performance_indicator": 7.3,
+    "property_1": 0,
+    "property_2": 1,
+    "property_3": 0
+  },
+  {
+    "display_name": "Datsun 240Z (S30) - Tuned",
+    "internal_name": "preset_240z_mech_2",
+    "performance_indicator": 8.1,
+    "property_1": 0,
+    "property_2": 1,
     "property_3": 0
   },
   {
@@ -274,7 +298,7 @@
   {
     "display_name": "Ferrari 488 Challenge Evo - Ferrari Challenge",
     "internal_name": "preset_f488ce_mech_1",
-    "performance_indicator": 20.3,
+    "performance_indicator": 20.2,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -282,7 +306,7 @@
   {
     "display_name": "Ferrari Daytona SP3 - Standard",
     "internal_name": "preset_sp3_mech_1",
-    "performance_indicator": 15.9,
+    "performance_indicator": 16.1,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -290,7 +314,7 @@
   {
     "display_name": "Ferrari F2004 - Standard",
     "internal_name": "preset_f2004_mech_1",
-    "performance_indicator": 40.8,
+    "performance_indicator": 41.4,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -298,7 +322,7 @@
   {
     "display_name": "Ferrari F40 LM - Standard",
     "internal_name": "preset_f40lm_mech_1",
-    "performance_indicator": 16.9,
+    "performance_indicator": 20.2,
     "property_1": 1,
     "property_2": 2,
     "property_3": 0
@@ -306,7 +330,7 @@
   {
     "display_name": "Ferrari SF-25 - F1 2025",
     "internal_name": "preset_sf25_mech_1",
-    "performance_indicator": 43.4,
+    "performance_indicator": 43,
     "property_1": 1,
     "property_2": 0,
     "property_3": 2
@@ -314,7 +338,7 @@
   {
     "display_name": "Ford Escort RS Cosworth - Standard",
     "internal_name": "preset_escortrs_mech_1",
-    "performance_indicator": 8.8,
+    "performance_indicator": 8.4,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -338,7 +362,7 @@
   {
     "display_name": "Honda S2000 AP1 - Standard",
     "internal_name": "preset_s2000ap1_mech_1",
-    "performance_indicator": 10.4,
+    "performance_indicator": 9.9,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -346,7 +370,7 @@
   {
     "display_name": "Hyundai i30 N Hatchback - Performance",
     "internal_name": "preset_i30n_hb_mech_1",
-    "performance_indicator": 9.9,
+    "performance_indicator": 9.4,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -354,7 +378,7 @@
   {
     "display_name": "Hyundai i30 N Hatchback - Performance N Limited",
     "internal_name": "preset_i30n_hb_mech_2",
-    "performance_indicator": 10.1,
+    "performance_indicator": 9.6,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -394,7 +418,7 @@
   {
     "display_name": "Lancia Delta HF integrale Evoluzione II - Evo 3 \"Violet\"",
     "internal_name": "preset_hfevoii_mech_2",
-    "performance_indicator": 8.9,
+    "performance_indicator": 9.1,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -402,7 +426,7 @@
   {
     "display_name": "Lancia Delta HF integrale Evoluzione II - Standard",
     "internal_name": "preset_hfevoii_mech_1",
-    "performance_indicator": 8.8,
+    "performance_indicator": 9,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -410,7 +434,7 @@
   {
     "display_name": "Lotus Emira - Sports",
     "internal_name": "preset_emira_mech_2",
-    "performance_indicator": 13.2,
+    "performance_indicator": 13.3,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -426,7 +450,7 @@
   {
     "display_name": "Lotus Exige V6 Cup - Lotus Motorsport",
     "internal_name": "preset_exigev6_mech_2",
-    "performance_indicator": 14.4,
+    "performance_indicator": 14.6,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -434,7 +458,7 @@
   {
     "display_name": "Lotus Exige V6 Cup - Standard",
     "internal_name": "preset_exigev6_mech_1",
-    "performance_indicator": 13.2,
+    "performance_indicator": 13.3,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -442,7 +466,7 @@
   {
     "display_name": "Maserati GT2 - GT2",
     "internal_name": "preset_mcgt2_mech_1",
-    "performance_indicator": 17.8,
+    "performance_indicator": 17.7,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -474,7 +498,7 @@
   {
     "display_name": "Mazda MX-5 ND Cup - Global Cup ND2",
     "internal_name": "preset_mx5ndcup_mech_2",
-    "performance_indicator": 11.1,
+    "performance_indicator": 11.2,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -482,7 +506,7 @@
   {
     "display_name": "Mercedes-AMG GT2 - GT2",
     "internal_name": "preset_amggt2_mech_1",
-    "performance_indicator": 18.0,
+    "performance_indicator": 18,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -490,7 +514,7 @@
   {
     "display_name": "Mercedes-Benz 190E 2.5-16 Evo II - Standard",
     "internal_name": "preset_190e_mech_1",
-    "performance_indicator": 9.6,
+    "performance_indicator": 9.8,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -522,7 +546,7 @@
   {
     "display_name": "Porsche 718 Cayman GT4 Clubsport - GT4",
     "internal_name": "preset_gt4csmr_mech_1",
-    "performance_indicator": 16.4,
+    "performance_indicator": 16.3,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -540,6 +564,14 @@
     "internal_name": "preset_718gt4rs_mech_2",
     "performance_indicator": 12.7,
     "property_1": 0,
+    "property_2": 0,
+    "property_3": 0
+  },
+  {
+    "display_name": "Porsche 911 GT2 RS Clubsport Evo (991II) - GT2",
+    "internal_name": "preset_gt2rscs_mech_1",
+    "performance_indicator": 18.2,
+    "property_1": 1,
     "property_2": 0,
     "property_3": 0
   },
@@ -570,7 +602,7 @@
   {
     "display_name": "Porsche 911 GT3 R Rennsport (992) - GT3",
     "internal_name": "preset_992ren_mech_1",
-    "performance_indicator": 19.9,
+    "performance_indicator": 19.8,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -578,7 +610,7 @@
   {
     "display_name": "Porsche 911 GT3 R Rennsport (992) - Unrestricted",
     "internal_name": "preset_992ren_mech_2",
-    "performance_indicator": 20.4,
+    "performance_indicator": 20.3,
     "property_1": 1,
     "property_2": 0,
     "property_3": 0
@@ -616,6 +648,14 @@
     "property_3": 0
   },
   {
+    "display_name": "Porsche 935 - GT2",
+    "internal_name": "preset_935_mech_1",
+    "performance_indicator": 17.9,
+    "property_1": 1,
+    "property_2": 0,
+    "property_3": 0
+  },
+  {
     "display_name": "Renault 5 GT Turbo - Standard",
     "internal_name": "preset_r5gt_mech_1",
     "performance_indicator": 8.5,
@@ -626,7 +666,7 @@
   {
     "display_name": "Toyota GR86 - Hakone Edition",
     "internal_name": "preset_gr86_mech_3",
-    "performance_indicator": 10.9,
+    "performance_indicator": 8.9,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -634,7 +674,7 @@
   {
     "display_name": "Toyota GR86 - Standard",
     "internal_name": "preset_gr86_mech_1",
-    "performance_indicator": 10.9,
+    "performance_indicator": 8.9,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -642,7 +682,7 @@
   {
     "display_name": "Toyota GR86 - Trueno Edition",
     "internal_name": "preset_gr86_mech_2",
-    "performance_indicator": 10.9,
+    "performance_indicator": 8.9,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
@@ -682,7 +722,7 @@
   {
     "display_name": "Toyota Supra MKIV - Drift",
     "internal_name": "preset_supramkiv_mech_2",
-    "performance_indicator": 13.0,
+    "performance_indicator": 13,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -690,7 +730,7 @@
   {
     "display_name": "Toyota Supra MKIV - Standard",
     "internal_name": "preset_supramkiv_mech_1",
-    "performance_indicator": 10.9,
+    "performance_indicator": 10.1,
     "property_1": 0,
     "property_2": 2,
     "property_3": 0
@@ -698,7 +738,7 @@
   {
     "display_name": "Volkswagen Golf 8 GTI - Clubsport",
     "internal_name": "preset_mk8gti_mech_1",
-    "performance_indicator": 11.1,
+    "performance_indicator": 10.8,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0

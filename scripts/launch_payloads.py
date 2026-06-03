@@ -54,6 +54,8 @@ ENV_BASE_KEYS = (
     "SERVER_TCP_PORT",
     "SERVER_UDP_PORT",
     "SERVER_HTTP_PORT",
+    "SERVER_TYPE",
+    "SERVER_TUNING_TYPE",
     "SERVER_CYCLE_ENABLED",
     "SERVER_DRIVER_PASSWORD",
     "SERVER_SPECTATOR_PASSWORD",
@@ -85,6 +87,8 @@ STRICT_TOKEN_ENV_KEYS = {
     "EVENT_CAR_CATEGORY",
     "EVENT_BAN_CARS",
     "EVENT_BAN_CAR_CATEGORY",
+    "SERVER_TYPE",
+    "SERVER_TUNING_TYPE",
     "RACE_DURATION_TYPE",
 }
 ACTIVE_SESSIONS = {
@@ -111,6 +115,11 @@ MAPPINGS = {
     "duration_type": {"time": RACE_DURATION_TYPE_TIME, "laps": RACE_DURATION_TYPE_LAPS},
     "event_type": {"practice": "GameModeType_PRACTICE", "race weekend": "GameModeType_RACE_WEEKEND"},
     "initial_grip": {"green": "InitialGrip_GREEN", "fast": "InitialGrip_FAST", "optimum": "InitialGrip_OPTIMUM"},
+    "server_type": {
+        "ranked": "MultiplayerServerListSessionType_RANKED",
+        "unranked": "MultiplayerServerListSessionType_UNRANKED",
+    },
+    "tuning_type": {"tuningallowed": "TuningAllowed", "tuningdenied": "TuningDenied"},
     "weather_behaviour": {
         "static": "GameModeSelectionWeatherBehaviour_STATIC",
         "dynamic": "GameModeSelectionWeatherBehaviour_DYNAMIC",
@@ -234,8 +243,10 @@ def warn_unsupported_launcher_fields(launcher: LauncherImport, document: dict) -
     if isinstance(server, dict):
         supported = {
             "SelectedServerTypeValue",
+            "SelectedTuningTypeValue",
             "ServerName",
             "MaxPlayers",
+            "MaxPlayersLimit",
             "TcpPort",
             "UdpPort",
             "HttpPort",
@@ -479,6 +490,7 @@ def load_server_launcher_json(env: dict[str, str], cfg: dict) -> LauncherImport:
     if isinstance(server, dict):
         mapping = {
             "SelectedServerTypeValue": "SERVER_TYPE",
+            "SelectedTuningTypeValue": "SERVER_TUNING_TYPE",
             "ServerName": "SERVER_NAME",
             "MaxPlayers": "SERVER_MAX_PLAYERS",
             "TcpPort": "SERVER_TCP_PORT",
@@ -1012,6 +1024,8 @@ def build_server_doc(state: EnvState, cfg: dict, event_type: str, selected_cars:
     )
 
     server_name = state.string("SERVER_NAME", defaults["server_name"])
+    server_type = state.enum("SERVER_TYPE", cfg["mappings"]["server_type"], defaults["server_type"])
+    tuning_type = state.enum("SERVER_TUNING_TYPE", cfg["mappings"]["tuning_type"], defaults["tuning_type"])
     max_players = state.integer("SERVER_MAX_PLAYERS", int(defaults["max_players"]))
     track_max_players = int(track.get("max_pit_slot") or max_players)
     if track_max_players > 0 and max_players > track_max_players:
@@ -1047,7 +1061,7 @@ def build_server_doc(state: EnvState, cfg: dict, event_type: str, selected_cars:
         ),
         "max_players": max_players,
         "allowed_cars_list_full": [selected_car_payload(state, car_name) for car_name in selected_cars],
-        "type": state.string("SERVER_TYPE", defaults["server_type"]),
+        "type": server_type,
         "cycle": state.boolean("SERVER_CYCLE_ENABLED", bool(defaults["cycle_enabled"])),
         "admin_password": state.string("SERVER_ADMIN_PASSWORD", defaults["admin_password"], allow_empty=True),
         "pi_min": 0.0,
@@ -1058,7 +1072,7 @@ def build_server_doc(state: EnvState, cfg: dict, event_type: str, selected_cars:
         "entry_list_server_url": state.string("SERVER_ENTRY_LIST_URL", "", allow_empty=True),
         "results_post_url": state.string("SERVER_RESULTS_POST_URL", "", allow_empty=True),
         "token": state.string("SERVER_RESULTS_TOKEN", "", allow_empty=True),
-        "tuning_allowed": True,
+        "tuning_allowed": tuning_type == "TuningAllowed",
         "entry_list_path": state.string("SERVER_ENTRY_LIST_PATH", "", allow_empty=True),
         "results_path": state.string("SERVER_RESULTS_PATH", "", allow_empty=True),
     }
