@@ -6,6 +6,7 @@
     "udp_port": 9700,
     "http_port": 8080,
     "server_type": "MultiplayerServerListSessionType_RANKED",
+    "tuning_type": "TuningAllowed",
     "cycle_enabled": true,
     "driver_password": "",
     "spectator_password": "",

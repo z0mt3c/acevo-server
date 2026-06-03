@@ -34,9 +34,10 @@ def write_launcher_json(base: Path, value) -> Path:
 def launcher_document():
     return {
         "Server": {
-            "SelectedServerTypeValue": "MultiplayerServerListSessionType_BOTH",
+            "SelectedServerTypeValue": "MultiplayerServerListSessionType_UNRANKED",
             "ServerName": "Windows Tool Server",
             "MaxPlayers": 8,
+            "MaxPlayersLimit": 50,
             "TcpPort": 9701,
             "UdpPort": 9701,
             "HttpPort": 8081,
@@ -45,6 +46,7 @@ def launcher_document():
             "SpectatorPassword": "spectator-password",
             "AdminPassword": "admin-password",
             "ResultsPostUrl": "https://results.example.test/launcher",
+            "SelectedTuningTypeValue": "TuningDenied",
         },
         "Event": {
             "SelectedSessionTypeValue": "GameModeType_RACE_WEEKEND",
@@ -208,6 +210,22 @@ class LaunchPayloadTests(unittest.TestCase):
             {"preset_190e_mech_1", "preset_964_mech_1", "preset_964_mech_2"},
         )
 
+    def test_new_0_7_car_env_tokens_match(self):
+        server_doc, _, warnings = launch_payloads.build_documents(
+            {"EVENT_CARS": "Audi_R8_LMS_GT3_Evo_II,Datsun_240Z,Porsche_911_GT2_RS_Clubsport_Evo,Porsche_935"}
+        )
+        self.assertEqual(warnings, [])
+        self.assertEqual(
+            selected_car_names(server_doc),
+            {
+                "preset_r8gt3_mech_1",
+                "preset_240z_mech_1",
+                "preset_240z_mech_2",
+                "preset_gt2rscs_mech_1",
+                "preset_935_mech_1",
+            },
+        )
+
     def test_event_type_controls_active_sessions(self):
         _, season_doc_practice, warnings_practice = launch_payloads.build_documents(
             {
@@ -340,7 +358,8 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertEqual(server_doc["driver_password"], "driver-password")
         self.assertEqual(server_doc["admin_password"], "admin-password")
         self.assertEqual(server_doc["results_post_url"], "https://results.example.test/launcher")
-        self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_BOTH")
+        self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_UNRANKED")
+        self.assertEqual(server_doc["tuning_type"], "TuningDenied")
 
         cars = {car["car_name"]: car for car in server_doc["allowed_cars_list_full"]}
         self.assertEqual(set(cars), {"preset_695b_mech_1", "ks_caterham_acmd_mech_1"})
@@ -364,10 +383,41 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertEqual(game_config["max_waiting_for_players"], 12)
 
         self.assertEqual(resolved(report, "SERVER_NAME")["source"], "json")
+        self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "json")
+        self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "json")
         self.assertEqual(resolved(report, "EVENT_CARS")["source"], "json")
         self.assertEqual(resolved(report, "RACE_MIN_WAITING_FOR_PLAYERS_SECONDS")["source"], "json")
         self.assertEqual(resolved(report, "RACE_MAX_WAITING_FOR_PLAYERS_SECONDS")["source"], "json")
         self.assertEqual(resolved(report, "SERVER_LAUNCHER_JSON")["source"], "env")
+
+    def test_server_type_and_tuning_type_env_values(self):
+        server_doc, _, warnings, report = launch_payloads.build_documents_with_report(
+            {
+                "SERVER_TYPE": "Unranked",
+                "SERVER_TUNING_TYPE": "TuningDenied",
+            }
+        )
+
+        self.assertEqual(warnings, [])
+        self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_UNRANKED")
+        self.assertEqual(server_doc["tuning_type"], "TuningDenied")
+        self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "env")
+        self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "env")
+
+    def test_server_type_and_tuning_type_invalid_values_fallback(self):
+        server_doc, _, warnings, report = launch_payloads.build_documents_with_report(
+            {
+                "SERVER_TYPE": "Both",
+                "SERVER_TUNING_TYPE": "Tuning_Denied",
+            }
+        )
+
+        self.assertTrue(any("SERVER_TYPE" in warning and "unknown value" in warning for warning in warnings))
+        self.assertTrue(any("SERVER_TUNING_TYPE" in warning and "unknown value" in warning for warning in warnings))
+        self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_RANKED")
+        self.assertEqual(server_doc["tuning_type"], "TuningAllowed")
+        self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "fallback")
+        self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "fallback")
 
     def test_env_overrides_server_launcher_json(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -685,6 +735,7 @@ class LaunchPayloadTests(unittest.TestCase):
         server_doc, _, warnings, report = launch_payloads.build_documents_with_report({})
         self.assertEqual(warnings, [])
         self.assertEqual(selected_car_names(server_doc), all_car_names())
+        self.assertEqual(len(server_doc["allowed_cars_list_full"]), 94)
         self.assertEqual(resolved(report, "EVENT_CARS")["value"], "all")
         self.assertEqual(resolved(report, "EVENT_CARS")["source"], "default")
         self.assertEqual(resolved(report, "EVENT_CAR_CATEGORY")["value"], "all")
