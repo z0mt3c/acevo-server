@@ -12,6 +12,7 @@ import struct
 import sys
 import unicodedata
 import zlib
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -182,6 +183,42 @@ def car_env_token(display_name: str) -> str:
     base_name = display_name.split(" - ", 1)[0]
     base_name = re.sub(r"(?<=\d)\.(?=\d)", "", base_name)
     return env_token(base_name)
+
+
+def car_variant_env_token(display_name: str) -> str:
+    if " - " not in display_name:
+        return ""
+    return env_token(display_name.split(" - ", 1)[1])
+
+
+def car_env_tokens(cars_data: list[dict]) -> dict[str, str]:
+    base_tokens: dict[str, str] = {}
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for car in cars_data:
+        base_token = car_env_token(car["display_name"])
+        base_tokens[car["internal_name"]] = base_token
+        groups[base_token].append(car)
+
+    candidates: dict[str, str] = {}
+    for car in cars_data:
+        internal_name = car["internal_name"]
+        base_token = base_tokens[internal_name]
+        if len(groups[base_token]) == 1:
+            candidates[internal_name] = base_token
+            continue
+
+        variant_token = car_variant_env_token(car["display_name"])
+        candidates[internal_name] = f"{base_token}_{variant_token}" if variant_token else env_token(internal_name)
+
+    counts = Counter(candidates.values())
+    return {
+        internal_name: token if counts[token] == 1 else env_token(internal_name)
+        for internal_name, token in candidates.items()
+    }
+
+
+def car_env_token_for_car(car: dict, cars_data: list[dict]) -> str:
+    return car_env_tokens(cars_data)[car["internal_name"]]
 
 
 def track_env_token(track: dict) -> str:
@@ -755,29 +792,39 @@ def add_unique(target: list[str], seen: set[str], values: list[str]) -> None:
             target.append(value)
 
 
-def car_matches_label(car: dict, label: str) -> bool:
+def car_exact_labels(car: dict, token: str) -> set[str]:
+    return {
+        normalize_label(token),
+        normalize_label(car.get("display_name", "")),
+        normalize_label(car.get("internal_name", "")),
+    }
+
+
+def car_matches_partial_label(car: dict, token: str, label: str) -> bool:
     display_name = car.get("display_name", "")
     display_label = normalize_label(display_name)
-    token_label = normalize_label(car_env_token(display_name))
-    internal_label = normalize_label(car.get("internal_name", ""))
-    return (
-        label == display_label
-        or label == token_label
-        or label == internal_label
-        or label in display_label
-        or label in token_label
-    )
+    token_label = normalize_label(token)
+    return label in display_label or label in token_label
 
 
-def car_label_variants(value: str) -> tuple[str, ...]:
-    variants = [normalize_label(value)]
-    if "_" in value or " - " not in value:
-        variants.append(normalize_label(car_env_token(value)))
-    return tuple(dict.fromkeys(label for label in variants if label))
+def matching_cars_for_label(cfg: dict, raw_label: str) -> tuple[list[str], bool]:
+    label = normalize_label(raw_label)
+    env_tokens = car_env_tokens(cfg["cars_data"])
 
+    exact_matches = [
+        car["internal_name"]
+        for car in cfg["cars_data"]
+        if label in car_exact_labels(car, env_tokens[car["internal_name"]])
+    ]
+    if exact_matches:
+        return exact_matches, False
 
-def matching_cars_for_labels(cfg: dict, labels: tuple[str, ...]) -> list[str]:
-    return [car["internal_name"] for car in cfg["cars_data"] if any(car_matches_label(car, label) for label in labels)]
+    partial_matches = [
+        car["internal_name"]
+        for car in cfg["cars_data"]
+        if car_matches_partial_label(car, env_tokens[car["internal_name"]], label)
+    ]
+    return partial_matches, len(partial_matches) > 1
 
 
 def resolve_car_filter(
@@ -791,7 +838,7 @@ def resolve_car_filter(
     if not raw_labels:
         return [], 0
 
-    if any("all" in car_label_variants(label) for label in raw_labels):
+    if any(normalize_label(label) == "all" for label in raw_labels):
         return all_car_names(cfg), 0
 
     selected: list[str] = []
@@ -799,14 +846,21 @@ def resolve_car_filter(
     invalid = 0
 
     for raw_label in raw_labels:
-        labels = car_label_variants(raw_label)
-        matches = matching_cars_for_labels(cfg, labels)
+        label = normalize_label(raw_label)
+        matches, is_ambiguous = matching_cars_for_label(cfg, raw_label)
+        if is_ambiguous:
+            invalid += 1
+            state.warn(f"{key}: ambiguous car token '{label}', ignoring.")
+            continue
         if not matches:
             invalid += 1
-            state.warn(f"{key}: unknown car '{labels[0]}', ignoring.")
+            state.warn(f"{key}: unknown car '{label}', ignoring.")
             continue
-        if allowed_pool is not None and not any(match in allowed_pool for match in matches):
-            state.warn(f"{key}: car '{labels[0]}' is not in allowed car pool, ignoring.")
+        if allowed_pool is not None:
+            matches = [match for match in matches if match in allowed_pool]
+            if not matches:
+                state.warn(f"{key}: car '{label}' is not in allowed car pool, ignoring.")
+                continue
         add_unique(selected, seen, matches)
 
     return selected, invalid

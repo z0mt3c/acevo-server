@@ -202,17 +202,22 @@ class LaunchPayloadTests(unittest.TestCase):
 
     def test_documented_car_env_tokens_match(self):
         server_doc, _, warnings = launch_payloads.build_documents(
-            {"EVENT_CARS": ("Mercedes_Benz_190E_25_16_Evo_II,Porsche_911_Turbo_36_(964)")}
+            {"EVENT_CARS": ("Mercedes_Benz_190E_25_16_Evo_II,Porsche_911_Turbo_36_964_Standard")}
         )
         self.assertEqual(warnings, [])
         self.assertEqual(
             selected_car_names(server_doc),
-            {"preset_190e_mech_1", "preset_964_mech_1", "preset_964_mech_2"},
+            {"preset_190e_mech_1", "preset_964_mech_1"},
         )
 
     def test_new_0_7_car_env_tokens_match(self):
         server_doc, _, warnings = launch_payloads.build_documents(
-            {"EVENT_CARS": "Audi_R8_LMS_GT3_Evo_II,Datsun_240Z,Porsche_911_GT2_RS_Clubsport_Evo,Porsche_935"}
+            {
+                "EVENT_CARS": (
+                    "Audi_R8_LMS_GT3_Evo_II,Datsun_240Z_S30_Standard,Datsun_240Z_S30_Tuned,"
+                    "Porsche_911_GT2_RS_Clubsport_Evo_991II,Porsche_935"
+                )
+            }
         )
         self.assertEqual(warnings, [])
         self.assertEqual(
@@ -225,6 +230,31 @@ class LaunchPayloadTests(unittest.TestCase):
                 "preset_935_mech_1",
             },
         )
+
+    def test_variant_car_env_tokens_are_unique(self):
+        server_doc, _, warnings = launch_payloads.build_documents(
+            {
+                "EVENT_CARS": (
+                    "Toyota_GR86_Trueno_Edition,"
+                    "Porsche_911_GT3_R_Rennsport_992_GT3,"
+                    "Porsche_911_GT3_R_Rennsport_992_Unrestricted"
+                )
+            }
+        )
+
+        self.assertEqual(warnings, [])
+        self.assertEqual(
+            selected_car_names(server_doc),
+            {"preset_gr86_mech_2", "preset_992ren_mech_1", "preset_992ren_mech_2"},
+        )
+
+    def test_ambiguous_car_env_tokens_warn_and_are_ignored(self):
+        server_doc, _, warnings = launch_payloads.build_documents(
+            {"EVENT_CARS": "Porsche_935,Porsche_911_GT3_R_Rennsport_992"}
+        )
+
+        self.assertTrue(any("ambiguous car token" in warning for warning in warnings))
+        self.assertEqual(selected_car_names(server_doc), {"preset_935_mech_1"})
 
     def test_event_type_controls_active_sessions(self):
         _, season_doc_practice, warnings_practice = launch_payloads.build_documents(
@@ -898,7 +928,7 @@ class LaunchPayloadTests(unittest.TestCase):
 
         expected = [
             (
-                launch_payloads.car_env_token(car["display_name"]),
+                launch_payloads.car_env_token_for_car(car, launch_payloads.load_config()["cars_data"]),
                 car["display_name"],
                 f"{float(car['performance_indicator']):.1f}",
             )
@@ -906,6 +936,7 @@ class LaunchPayloadTests(unittest.TestCase):
         ]
 
         self.assertEqual(rows, expected)
+        self.assertEqual(len({row[0] for row in rows}), len(rows))
 
     def test_cli_writes_payload_and_report_files(self):
         with tempfile.TemporaryDirectory() as tmp:
