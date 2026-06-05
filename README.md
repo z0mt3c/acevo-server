@@ -175,105 +175,105 @@ You can set multiple car categories separated by commas, like `EVENT_CAR_CATEGOR
 ## Cars
 
 Use these strings for the environment variable `EVENT_CARS`.<br/>
-You can set multiple cars separated by commas, like `EVENT_CARS=Abarth_695_Biposto,Caterham_Academy`.
+You can set multiple cars separated by commas, like `EVENT_CARS=Toyota_GR86_Trueno_Edition,Porsche_911_GT3_R_Rennsport_992_Unrestricted`.
 
-| Name                                      | Description                                                     | Score |
-| ----------------------------------------- | --------------------------------------------------------------- | ----- |
-| `all`                                     | **[ All Cars ]**                                                | -     |
-| `Abarth_695_Biposto`                      | Abarth 695 Biposto - Standard                                   | 10.2  |
-| `Alfa_Romeo_75_Turbo_Evoluzione`          | Alfa Romeo 75 Turbo Evoluzione - Standard                       | 8.0   |
-| `Alfa_Romeo_Giulia_GTAm`                  | Alfa Romeo Giulia GTAm - Standard                               | 12.8  |
-| `Alfa_Romeo_Giulia_Sprint_GTA`            | Alfa Romeo Giulia Sprint GTA - Standard                         | 7.7   |
-| `Alfa_Romeo_Junior`                       | Alfa Romeo Junior - Elettrica 280 CV Veloce                     | 10.5  |
-| `Alpine_A110_S`                           | Alpine A110 S - Aero Package                                    | 12.0  |
-| `Alpine_A290_Beta`                        | Alpine A290 Beta - Standard                                     | 9.8   |
-| `Audi_R8_LMS_GT3_Evo_II`                  | Audi R8 LMS GT3 Evo II - GT3                                    | 20.6  |
-| `Audi_R8_LMS_GT4_Evo`                     | Audi R8 LMS GT4 Evo - GT4                                       | 15.6  |
-| `Audi_RS_3_Sportback`                     | Audi RS 3 Sportback - Sportback                                 | 12.2  |
-| `Audi_RS_6_Avant`                         | Audi RS 6 Avant - Standard                                      | 12.2  |
-| `Audi_Sport_quattro`                      | Audi Sport quattro - Standard                                   | 10.7  |
-| `BMW_M2_Coupe`                            | BMW M2 Coupe - Performance                                      | 11.7  |
-| `BMW_M2_Coupe`                            | BMW M2 Coupe - Standard                                         | 11.5  |
-| `BMW_M2_CS_Racing`                        | BMW M2 CS Racing - 350                                          | 13.1  |
-| `BMW_M2_CS_Racing`                        | BMW M2 CS Racing - 450                                          | 13.5  |
-| `BMW_M3_E30_Sport_Evo_Evolution_III`      | BMW M3 E30 Sport Evo (Evolution III) - Standard                 | 9.4   |
-| `BMW_M3_E46_CSL`                          | BMW M3 E46 CSL - Standard                                       | 10.0  |
-| `BMW_M4_CSL`                              | BMW M4 CSL - Standard                                           | 11.9  |
-| `BMW_M4_GT3_Evo`                          | BMW M4 GT3 Evo - GT3                                            | 21.1  |
-| `BMW_M8_Competition`                      | BMW M8 Competition - Standard                                   | 11.6  |
-| `Caterham_485_CSR`                        | Caterham 485 CSR - Final Edition                                | 7.8   |
-| `Caterham_485_CSR`                        | Caterham 485 CSR - Road                                         | 7.8   |
-| `Caterham_485_CSR`                        | Caterham 485 CSR - Track                                        | 7.8   |
-| `Caterham_Academy`                        | Caterham Academy - Academy                                      | 8.8   |
-| `Chevrolet_Camaro_ZL1`                    | Chevrolet Camaro ZL1 - 1LE                                      | 12.5  |
-| `Chevrolet_Camaro_ZL1`                    | Chevrolet Camaro ZL1 - Standard                                 | 12.3  |
-| `Dallara_EXP`                             | Dallara EXP - Standard                                          | 22.6  |
-| `Dallara_Stradale`                        | Dallara Stradale - Coupe                                        | 19.0  |
-| `Dallara_Stradale`                        | Dallara Stradale - Spider                                       | 19.0  |
-| `Dallara_Stradale`                        | Dallara Stradale - Track                                        | 21.3  |
-| `Datsun_240Z_S30`                         | Datsun 240Z (S30) - Standard                                    | 7.3   |
-| `Datsun_240Z_S30`                         | Datsun 240Z (S30) - Tuned                                       | 8.1   |
-| `Ferrari_288_GTO`                         | Ferrari 288 GTO - Standard                                      | 11.1  |
-| `Ferrari_296_GT3`                         | Ferrari 296 GT3 - GT3                                           | 22.3  |
-| `Ferrari_296_GTB`                         | Ferrari 296 GTB - Assetto Fiorano                               | 14.7  |
-| `Ferrari_296_GTB`                         | Ferrari 296 GTB - Standard                                      | 14.7  |
-| `Ferrari_488_Challenge_Evo`               | Ferrari 488 Challenge Evo - Ferrari Challenge                   | 20.2  |
-| `Ferrari_Daytona_SP3`                     | Ferrari Daytona SP3 - Standard                                  | 16.1  |
-| `Ferrari_F2004`                           | Ferrari F2004 - Standard                                        | 41.4  |
-| `Ferrari_F40_LM`                          | Ferrari F40 LM - Standard                                       | 20.2  |
-| `Ferrari_SF_25`                           | Ferrari SF-25 - F1 2025                                         | 43.0  |
-| `Ford_Escort_RS_Cosworth`                 | Ford Escort RS Cosworth - Standard                              | 8.4   |
-| `Ford_Mustang_GT3`                        | Ford Mustang GT3 - GT3                                          | 19.4  |
-| `Honda_NSX_R_92R`                         | Honda NSX-R 92R - Standard                                      | 10.8  |
-| `Honda_S2000_AP1`                         | Honda S2000 AP1 - Standard                                      | 9.9   |
-| `Hyundai_i30_N_Hatchback`                 | Hyundai i30 N Hatchback - Performance                           | 9.4   |
-| `Hyundai_i30_N_Hatchback`                 | Hyundai i30 N Hatchback - Performance N Limited                 | 9.6   |
-| `Lamborghini_Countach_LP5000_QV`          | Lamborghini Countach LP5000 QV - LP5000 QV                      | 9.5   |
-| `Lamborghini_Huracan_ST_EVO2`             | Lamborghini Huracan ST EVO2 - Super Trofeo                      | 18.4  |
-| `Lamborghini_Huracan_STO`                 | Lamborghini Huracan STO - Road                                  | 15.1  |
-| `Lamborghini_Huracan_STO`                 | Lamborghini Huracan STO - Trackday                              | 15.1  |
-| `Lancia_Delta_HF_integrale_Evoluzione_II` | Lancia Delta HF integrale Evoluzione II - Evo 3 "Violet"        | 9.1   |
-| `Lancia_Delta_HF_integrale_Evoluzione_II` | Lancia Delta HF integrale Evoluzione II - Standard              | 9.0   |
-| `Lotus_Emira`                             | Lotus Emira - Sports                                            | 13.3  |
-| `Lotus_Emira`                             | Lotus Emira - Touring                                           | 13.1  |
-| `Lotus_Exige_V6_Cup`                      | Lotus Exige V6 Cup - Lotus Motorsport                           | 14.6  |
-| `Lotus_Exige_V6_Cup`                      | Lotus Exige V6 Cup - Standard                                   | 13.3  |
-| `Maserati_GT2`                            | Maserati GT2 - GT2                                              | 17.7  |
-| `Mazda_MX_5_NA`                           | Mazda MX-5 NA - RS Limited                                      | 9.3   |
-| `Mazda_MX_5_NA`                           | Mazda MX-5 NA - Standard                                        | 9.1   |
-| `Mazda_MX_5_ND_Cup`                       | Mazda MX-5 ND Cup - Global Cup ND1                              | 10.9  |
-| `Mazda_MX_5_ND_Cup`                       | Mazda MX-5 ND Cup - Global Cup ND2                              | 11.2  |
-| `Mercedes_AMG_GT2`                        | Mercedes-AMG GT2 - GT2                                          | 18.0  |
-| `Mercedes_Benz_190E_25_16_Evo_II`         | Mercedes-Benz 190E 2.5-16 Evo II - Standard                     | 9.8   |
-| `Mini_John_Cooper_S`                      | Mini John Cooper S - Standard                                   | 9.5   |
-| `Mini_John_Cooper_S`                      | Mini John Cooper S - Tune                                       | 10.8  |
-| `Peugeot_205_T16`                         | Peugeot 205 T16 - Standard                                      | 9.8   |
-| `Porsche_718_Cayman_GT4_Clubsport`        | Porsche 718 Cayman GT4 Clubsport - GT4                          | 16.3  |
-| `Porsche_718_Cayman_GT4_RS`               | Porsche 718 Cayman GT4 RS - Standard                            | 12.7  |
-| `Porsche_718_Cayman_GT4_RS`               | Porsche 718 Cayman GT4 RS - Weissach                            | 12.7  |
-| `Porsche_911_GT2_RS_Clubsport_Evo_991II`  | Porsche 911 GT2 RS Clubsport Evo (991II) - GT2                  | 18.2  |
-| `Porsche_911_GT3_Cup_992`                 | Porsche 911 GT3 Cup (992) - ABS                                 | 17.3  |
-| `Porsche_911_GT3_Cup_992`                 | Porsche 911 GT3 Cup (992) - ABS TC                              | 17.3  |
-| `Porsche_911_GT3_Cup_992`                 | Porsche 911 GT3 Cup (992) - No ABS No TC                        | 17.3  |
-| `Porsche_911_GT3_R_Rennsport_992`         | Porsche 911 GT3 R Rennsport (992) - GT3                         | 19.8  |
-| `Porsche_911_GT3_R_Rennsport_992`         | Porsche 911 GT3 R Rennsport (992) - Unrestricted                | 20.3  |
-| `Porsche_911_GT3_RS_992`                  | Porsche 911 GT3 RS (992) - Clubsport                            | 16.6  |
-| `Porsche_911_GT3_RS_992`                  | Porsche 911 GT3 RS (992) - Weissach                             | 16.6  |
-| `Porsche_911_Turbo_36_964`                | Porsche 911 Turbo 3.6 (964) - Standard                          | 12.3  |
-| `Porsche_911_Turbo_36_964`                | Porsche 911 Turbo 3.6 (964) - X88                               | 12.4  |
-| `Porsche_935`                             | Porsche 935 - GT2                                               | 17.9  |
-| `Renault_5_GT_Turbo`                      | Renault 5 GT Turbo - Standard                                   | 8.5   |
-| `Toyota_GR86`                             | Toyota GR86 - Hakone Edition                                    | 8.9   |
-| `Toyota_GR86`                             | Toyota GR86 - Standard                                          | 8.9   |
-| `Toyota_GR86`                             | Toyota GR86 - Trueno Edition                                    | 8.9   |
-| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86` | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Anime Tribute       | 9.6   |
-| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86` | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Kouki               | 8.3   |
-| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86` | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Kouki Black Limited | 8.3   |
-| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86` | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Zenki               | 8.3   |
-| `Toyota_Supra_MKIV`                       | Toyota Supra MKIV - Drift                                       | 13.0  |
-| `Toyota_Supra_MKIV`                       | Toyota Supra MKIV - Standard                                    | 10.1  |
-| `Volkswagen_Golf_8_GTI`                   | Volkswagen Golf 8 GTI - Clubsport                               | 10.8  |
-| `Volkswagen_Golf_GTI_Mk1`                 | Volkswagen Golf GTI Mk1 - Standard                              | 7.4   |
+| Name                                                          | Description                                                     | Score |
+| ------------------------------------------------------------- | --------------------------------------------------------------- | ----- |
+| `all`                                                         | **[ All Cars ]**                                                | -     |
+| `Abarth_695_Biposto`                                          | Abarth 695 Biposto - Standard                                   | 10.2  |
+| `Alfa_Romeo_75_Turbo_Evoluzione`                              | Alfa Romeo 75 Turbo Evoluzione - Standard                       | 8.0   |
+| `Alfa_Romeo_Giulia_GTAm`                                      | Alfa Romeo Giulia GTAm - Standard                               | 12.8  |
+| `Alfa_Romeo_Giulia_Sprint_GTA`                                | Alfa Romeo Giulia Sprint GTA - Standard                         | 7.7   |
+| `Alfa_Romeo_Junior`                                           | Alfa Romeo Junior - Elettrica 280 CV Veloce                     | 10.5  |
+| `Alpine_A110_S`                                               | Alpine A110 S - Aero Package                                    | 12.0  |
+| `Alpine_A290_Beta`                                            | Alpine A290 Beta - Standard                                     | 9.8   |
+| `Audi_R8_LMS_GT3_Evo_II`                                      | Audi R8 LMS GT3 Evo II - GT3                                    | 20.6  |
+| `Audi_R8_LMS_GT4_Evo`                                         | Audi R8 LMS GT4 Evo - GT4                                       | 15.6  |
+| `Audi_RS_3_Sportback`                                         | Audi RS 3 Sportback - Sportback                                 | 12.2  |
+| `Audi_RS_6_Avant`                                             | Audi RS 6 Avant - Standard                                      | 12.2  |
+| `Audi_Sport_quattro`                                          | Audi Sport quattro - Standard                                   | 10.7  |
+| `BMW_M2_Coupe_Performance`                                    | BMW M2 Coupe - Performance                                      | 11.7  |
+| `BMW_M2_Coupe_Standard`                                       | BMW M2 Coupe - Standard                                         | 11.5  |
+| `BMW_M2_CS_Racing_350`                                        | BMW M2 CS Racing - 350                                          | 13.1  |
+| `BMW_M2_CS_Racing_450`                                        | BMW M2 CS Racing - 450                                          | 13.5  |
+| `BMW_M3_E30_Sport_Evo_Evolution_III`                          | BMW M3 E30 Sport Evo (Evolution III) - Standard                 | 9.4   |
+| `BMW_M3_E46_CSL`                                              | BMW M3 E46 CSL - Standard                                       | 10.0  |
+| `BMW_M4_CSL`                                                  | BMW M4 CSL - Standard                                           | 11.9  |
+| `BMW_M4_GT3_Evo`                                              | BMW M4 GT3 Evo - GT3                                            | 21.1  |
+| `BMW_M8_Competition`                                          | BMW M8 Competition - Standard                                   | 11.6  |
+| `Caterham_485_CSR_Final_Edition`                              | Caterham 485 CSR - Final Edition                                | 7.8   |
+| `Caterham_485_CSR_Road`                                       | Caterham 485 CSR - Road                                         | 7.8   |
+| `Caterham_485_CSR_Track`                                      | Caterham 485 CSR - Track                                        | 7.8   |
+| `Caterham_Academy`                                            | Caterham Academy - Academy                                      | 8.8   |
+| `Chevrolet_Camaro_ZL1_1LE`                                    | Chevrolet Camaro ZL1 - 1LE                                      | 12.5  |
+| `Chevrolet_Camaro_ZL1_Standard`                               | Chevrolet Camaro ZL1 - Standard                                 | 12.3  |
+| `Dallara_EXP`                                                 | Dallara EXP - Standard                                          | 22.6  |
+| `Dallara_Stradale_Coupe`                                      | Dallara Stradale - Coupe                                        | 19.0  |
+| `Dallara_Stradale_Spider`                                     | Dallara Stradale - Spider                                       | 19.0  |
+| `Dallara_Stradale_Track`                                      | Dallara Stradale - Track                                        | 21.3  |
+| `Datsun_240Z_S30_Standard`                                    | Datsun 240Z (S30) - Standard                                    | 7.3   |
+| `Datsun_240Z_S30_Tuned`                                       | Datsun 240Z (S30) - Tuned                                       | 8.1   |
+| `Ferrari_288_GTO`                                             | Ferrari 288 GTO - Standard                                      | 11.1  |
+| `Ferrari_296_GT3`                                             | Ferrari 296 GT3 - GT3                                           | 22.3  |
+| `Ferrari_296_GTB_Assetto_Fiorano`                             | Ferrari 296 GTB - Assetto Fiorano                               | 14.7  |
+| `Ferrari_296_GTB_Standard`                                    | Ferrari 296 GTB - Standard                                      | 14.7  |
+| `Ferrari_488_Challenge_Evo`                                   | Ferrari 488 Challenge Evo - Ferrari Challenge                   | 20.2  |
+| `Ferrari_Daytona_SP3`                                         | Ferrari Daytona SP3 - Standard                                  | 16.1  |
+| `Ferrari_F2004`                                               | Ferrari F2004 - Standard                                        | 41.4  |
+| `Ferrari_F40_LM`                                              | Ferrari F40 LM - Standard                                       | 20.2  |
+| `Ferrari_SF_25`                                               | Ferrari SF-25 - F1 2025                                         | 43.0  |
+| `Ford_Escort_RS_Cosworth`                                     | Ford Escort RS Cosworth - Standard                              | 8.4   |
+| `Ford_Mustang_GT3`                                            | Ford Mustang GT3 - GT3                                          | 19.4  |
+| `Honda_NSX_R_92R`                                             | Honda NSX-R 92R - Standard                                      | 10.8  |
+| `Honda_S2000_AP1`                                             | Honda S2000 AP1 - Standard                                      | 9.9   |
+| `Hyundai_i30_N_Hatchback_Performance`                         | Hyundai i30 N Hatchback - Performance                           | 9.4   |
+| `Hyundai_i30_N_Hatchback_Performance_N_Limited`               | Hyundai i30 N Hatchback - Performance N Limited                 | 9.6   |
+| `Lamborghini_Countach_LP5000_QV`                              | Lamborghini Countach LP5000 QV - LP5000 QV                      | 9.5   |
+| `Lamborghini_Huracan_ST_EVO2`                                 | Lamborghini Huracan ST EVO2 - Super Trofeo                      | 18.4  |
+| `Lamborghini_Huracan_STO_Road`                                | Lamborghini Huracan STO - Road                                  | 15.1  |
+| `Lamborghini_Huracan_STO_Trackday`                            | Lamborghini Huracan STO - Trackday                              | 15.1  |
+| `Lancia_Delta_HF_integrale_Evoluzione_II_Evo_3_Violet`        | Lancia Delta HF integrale Evoluzione II - Evo 3 "Violet"        | 9.1   |
+| `Lancia_Delta_HF_integrale_Evoluzione_II_Standard`            | Lancia Delta HF integrale Evoluzione II - Standard              | 9.0   |
+| `Lotus_Emira_Sports`                                          | Lotus Emira - Sports                                            | 13.3  |
+| `Lotus_Emira_Touring`                                         | Lotus Emira - Touring                                           | 13.1  |
+| `Lotus_Exige_V6_Cup_Lotus_Motorsport`                         | Lotus Exige V6 Cup - Lotus Motorsport                           | 14.6  |
+| `Lotus_Exige_V6_Cup_Standard`                                 | Lotus Exige V6 Cup - Standard                                   | 13.3  |
+| `Maserati_GT2`                                                | Maserati GT2 - GT2                                              | 17.7  |
+| `Mazda_MX_5_NA_RS_Limited`                                    | Mazda MX-5 NA - RS Limited                                      | 9.3   |
+| `Mazda_MX_5_NA_Standard`                                      | Mazda MX-5 NA - Standard                                        | 9.1   |
+| `Mazda_MX_5_ND_Cup_Global_Cup_ND1`                            | Mazda MX-5 ND Cup - Global Cup ND1                              | 10.9  |
+| `Mazda_MX_5_ND_Cup_Global_Cup_ND2`                            | Mazda MX-5 ND Cup - Global Cup ND2                              | 11.2  |
+| `Mercedes_AMG_GT2`                                            | Mercedes-AMG GT2 - GT2                                          | 18.0  |
+| `Mercedes_Benz_190E_25_16_Evo_II`                             | Mercedes-Benz 190E 2.5-16 Evo II - Standard                     | 9.8   |
+| `Mini_John_Cooper_S_Standard`                                 | Mini John Cooper S - Standard                                   | 9.5   |
+| `Mini_John_Cooper_S_Tune`                                     | Mini John Cooper S - Tune                                       | 10.8  |
+| `Peugeot_205_T16`                                             | Peugeot 205 T16 - Standard                                      | 9.8   |
+| `Porsche_718_Cayman_GT4_Clubsport`                            | Porsche 718 Cayman GT4 Clubsport - GT4                          | 16.3  |
+| `Porsche_718_Cayman_GT4_RS_Standard`                          | Porsche 718 Cayman GT4 RS - Standard                            | 12.7  |
+| `Porsche_718_Cayman_GT4_RS_Weissach`                          | Porsche 718 Cayman GT4 RS - Weissach                            | 12.7  |
+| `Porsche_911_GT2_RS_Clubsport_Evo_991II`                      | Porsche 911 GT2 RS Clubsport Evo (991II) - GT2                  | 18.2  |
+| `Porsche_911_GT3_Cup_992_ABS`                                 | Porsche 911 GT3 Cup (992) - ABS                                 | 17.3  |
+| `Porsche_911_GT3_Cup_992_ABS_TC`                              | Porsche 911 GT3 Cup (992) - ABS TC                              | 17.3  |
+| `Porsche_911_GT3_Cup_992_No_ABS_No_TC`                        | Porsche 911 GT3 Cup (992) - No ABS No TC                        | 17.3  |
+| `Porsche_911_GT3_R_Rennsport_992_GT3`                         | Porsche 911 GT3 R Rennsport (992) - GT3                         | 19.8  |
+| `Porsche_911_GT3_R_Rennsport_992_Unrestricted`                | Porsche 911 GT3 R Rennsport (992) - Unrestricted                | 20.3  |
+| `Porsche_911_GT3_RS_992_Clubsport`                            | Porsche 911 GT3 RS (992) - Clubsport                            | 16.6  |
+| `Porsche_911_GT3_RS_992_Weissach`                             | Porsche 911 GT3 RS (992) - Weissach                             | 16.6  |
+| `Porsche_911_Turbo_36_964_Standard`                           | Porsche 911 Turbo 3.6 (964) - Standard                          | 12.3  |
+| `Porsche_911_Turbo_36_964_X88`                                | Porsche 911 Turbo 3.6 (964) - X88                               | 12.4  |
+| `Porsche_935`                                                 | Porsche 935 - GT2                                               | 17.9  |
+| `Renault_5_GT_Turbo`                                          | Renault 5 GT Turbo - Standard                                   | 8.5   |
+| `Toyota_GR86_Hakone_Edition`                                  | Toyota GR86 - Hakone Edition                                    | 8.9   |
+| `Toyota_GR86_Standard`                                        | Toyota GR86 - Standard                                          | 8.9   |
+| `Toyota_GR86_Trueno_Edition`                                  | Toyota GR86 - Trueno Edition                                    | 8.9   |
+| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86_Anime_Tribute`       | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Anime Tribute       | 9.6   |
+| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86_Kouki`               | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Kouki               | 8.3   |
+| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86_Kouki_Black_Limited` | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Kouki Black Limited | 8.3   |
+| `Toyota_Sprinter_Trueno_1600GT_Apex_AE86_Zenki`               | Toyota Sprinter Trueno 1600GT-Apex (AE86) - Zenki               | 8.3   |
+| `Toyota_Supra_MKIV_Drift`                                     | Toyota Supra MKIV - Drift                                       | 13.0  |
+| `Toyota_Supra_MKIV_Standard`                                  | Toyota Supra MKIV - Standard                                    | 10.1  |
+| `Volkswagen_Golf_8_GTI`                                       | Volkswagen Golf 8 GTI - Clubsport                               | 10.8  |
+| `Volkswagen_Golf_GTI_Mk1`                                     | Volkswagen Golf GTI Mk1 - Standard                              | 7.4   |
 
 ## Tracks
 
