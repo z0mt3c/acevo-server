@@ -93,8 +93,7 @@ Set or adjust in `.env` or in the docker compose file.
 | `SERVER_HTTP_PORT`                               | `8080`                         | integer | HTTP/listing port exposed by the server.                                                                       |
 | `SERVER_MAX_PLAYERS`                             | `20`                           | integer | Maximum player slots; downscaled to the selected track maximum if configured too high.                         |
 | `SERVER_NAME`                                    | `AC EVO Nordschleife Trackday` | string  | Public server name.                                                                                            |
-| `SERVER_RESULTS_POST_URL`                        | empty                          | string  | Experimental native result POST endpoint; upstream POST format is not guaranteed documented.                   |
-| `SERVER_RESULTS_TOKEN`                           | empty                          | string  | Optional token for the native result POST endpoint.                                                            |
+| `SERVER_RESULTS_POST_URL`                        | empty                          | string  | Experimental native result POST endpoint; include auth as query params if needed.                              |
 | `SERVER_SPECTATOR_PASSWORD`                      | empty                          | string  | Spectator password.                                                                                            |
 | `SERVER_TCP_PORT`                                | `9700`                         | integer | TCP listener port.                                                                                             |
 | `SERVER_TYPE`                                    | `Ranked`                       | enum    | Server type: `Ranked` or `Unranked`.                                                                           |

@@ -851,20 +851,28 @@ class LaunchPayloadTests(unittest.TestCase):
 
     def test_result_post_settings_are_passed_through(self):
         server_doc, _, warnings, report = launch_payloads.build_documents_with_report(
-            {
-                "SERVER_RESULTS_POST_URL": "https://results.example.test/acevo",
-                "SERVER_RESULTS_TOKEN": "result-secret",
-            }
+            {"SERVER_RESULTS_POST_URL": "https://results.example.test/acevo?token=result-secret"}
         )
         self.assertEqual(warnings, [])
 
-        self.assertEqual(server_doc["results_post_url"], "https://results.example.test/acevo")
-        self.assertEqual(server_doc["token"], "result-secret")
+        self.assertEqual(server_doc["results_post_url"], "https://results.example.test/acevo?token=result-secret")
+        self.assertEqual(server_doc["token"], "")
         self.assertEqual(server_doc["results_path"], "")
         self.assertEqual(server_doc["entry_list_path"], "")
         self.assertEqual(server_doc["entry_list_server_url"], "")
-        self.assertEqual(resolved(report, "SERVER_RESULTS_POST_URL")["value"], "https://results.example.test/acevo")
-        self.assertEqual(resolved(report, "SERVER_RESULTS_TOKEN")["value"], "***MASKED***")
+        self.assertEqual(
+            resolved(report, "SERVER_RESULTS_POST_URL")["value"],
+            "https://results.example.test/acevo?token=result-secret",
+        )
+
+    def test_result_token_env_is_ignored_as_unknown(self):
+        server_doc, _, warnings, report = launch_payloads.build_documents_with_report(
+            {"SERVER_RESULTS_TOKEN": "result-secret"}
+        )
+
+        self.assertTrue(any("SERVER_RESULTS_TOKEN" in warning for warning in warnings))
+        self.assertEqual(server_doc["token"], "")
+        self.assertFalse(any(item["key"] == "SERVER_RESULTS_TOKEN" for item in report["resolved_env"]))
 
     def test_sensitive_values_are_masked_in_report(self):
         _, _, warnings, report = launch_payloads.build_documents_with_report(

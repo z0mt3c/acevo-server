@@ -96,8 +96,7 @@ This section is shortened on Docker Hub. See the full table in the GitHub README
 | `SERVER_MAX_PLAYERS`                   | `20`                           | Maximum player slots; downscaled to track max.   |
 | `SERVER_TYPE`                          | `Ranked`                       | `Ranked` or `Unranked`.                          |
 | `SERVER_TUNING_TYPE`                   | `TuningAllowed`                | `TuningAllowed` or `TuningDenied`.               |
-| `SERVER_RESULTS_POST_URL`              | empty                          | Experimental native result POST endpoint.        |
-| `SERVER_RESULTS_TOKEN`                 | empty                          | Optional token for native result POST endpoint.  |
+| `SERVER_RESULTS_POST_URL`              | empty                          | Result POST endpoint; put auth in URL query.     |
 | `EVENT_TYPE`                           | `Practice`                     | `Practice` or `Race_Weekend`.                    |
 | `EVENT_TRACK`                          | `Nurburgring_Touristenfahrten` | Track token.                                     |
 | `EVENT_CARS`                           | `all`                          | Comma-separated car names/substrings, or `all`.  |

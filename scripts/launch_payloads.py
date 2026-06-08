@@ -62,7 +62,6 @@ ENV_BASE_KEYS = (
     "SERVER_SPECTATOR_PASSWORD",
     "SERVER_ADMIN_PASSWORD",
     "SERVER_RESULTS_POST_URL",
-    "SERVER_RESULTS_TOKEN",
     "EVENT_TYPE",
     "EVENT_INITIAL_GRIP",
     "EVENT_WEATHER_BEHAVIOUR",
@@ -105,7 +104,6 @@ RUNTIME_KEYS = {
         "SERVER_DRIVER_PASSWORD",
         "SERVER_SPECTATOR_PASSWORD",
         "SERVER_ADMIN_PASSWORD",
-        "SERVER_RESULTS_TOKEN",
     ],
     "external_runtime_env": {
         "ACEVO_FORCE_SOFTWARE_RENDERING": {"default": "true", "note": "used by start.sh Proton rendering mode"}
@@ -1125,7 +1123,7 @@ def build_server_doc(state: EnvState, cfg: dict, event_type: str, selected_cars:
         "property_3": False,
         "entry_list_server_url": state.string("SERVER_ENTRY_LIST_URL", "", allow_empty=True),
         "results_post_url": state.string("SERVER_RESULTS_POST_URL", "", allow_empty=True),
-        "token": state.string("SERVER_RESULTS_TOKEN", "", allow_empty=True),
+        "token": "",
         "tuning_type": tuning_type,
         "entry_list_path": state.string("SERVER_ENTRY_LIST_PATH", "", allow_empty=True),
         "results_path": state.string("SERVER_RESULTS_PATH", "", allow_empty=True),
