@@ -349,22 +349,8 @@ function renderCars() {
   toolbar.append(categoryGroup());
   toolbar.append(piRow());
 
-  const actions = document.createElement("div");
-  actions.className = "switch-row";
-  const left = document.createElement("div");
-  left.className = "action-bar";
-  const allVisibleWrap = document.createElement("label");
-  allVisibleWrap.className = "cat cars-select-all";
-  const allVisibleCb = document.createElement("md-checkbox");
-  allVisibleCb.id = "cars-all-visible";
-  allVisibleCb.addEventListener("change", () => setAllVisible(allVisibleCb.checked));
-  const allVisibleSpan = document.createElement("span");
-  allVisibleSpan.textContent = "All visible";
-  allVisibleWrap.append(allVisibleCb, allVisibleSpan);
-  const selectNone = document.createElement("md-text-button");
-  selectNone.textContent = "Select none";
-  selectNone.addEventListener("click", () => setAllVisible(false));
-  left.append(allVisibleWrap, selectNone);
+  const filterRow = document.createElement("div");
+  filterRow.className = "cars-filter-row";
   const onlyWrap = document.createElement("label");
   onlyWrap.className = "cat";
   const onlyCb = document.createElement("md-checkbox");
@@ -376,10 +362,29 @@ function renderCars() {
   const onlySpan = document.createElement("span");
   onlySpan.textContent = "Show only selected";
   onlyWrap.append(onlyCb, onlySpan);
-  actions.append(left, onlyWrap);
-  toolbar.append(actions);
+  filterRow.append(onlyWrap);
+  toolbar.append(filterRow);
 
   container.append(toolbar);
+
+  const header = document.createElement("div");
+  header.className = "cars-list-header";
+  const allVisibleWrap = document.createElement("label");
+  allVisibleWrap.className = "cat cars-select-all";
+  const allVisibleCb = document.createElement("md-checkbox");
+  allVisibleCb.id = "cars-all-visible";
+  allVisibleCb.addEventListener("change", () => setAllVisible(allVisibleCb.checked));
+  const allVisibleSpan = document.createElement("span");
+  allVisibleSpan.textContent = "All visible cars";
+  allVisibleWrap.append(allVisibleCb, allVisibleSpan);
+  const ballastHeader = document.createElement("span");
+  ballastHeader.className = "cars-list-header-label";
+  ballastHeader.textContent = "Ballast";
+  const restrictorHeader = document.createElement("span");
+  restrictorHeader.className = "cars-list-header-label";
+  restrictorHeader.textContent = "Restr.";
+  header.append(allVisibleWrap, ballastHeader, restrictorHeader);
+  container.append(header);
 
   const list = document.createElement("div");
   list.className = "cars-list";

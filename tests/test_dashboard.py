@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -289,9 +290,17 @@ class BasicAuthTests(unittest.TestCase):
         self.assertFalse(app.check_basic_auth("Bearer xyz", "admin", "s3cret"))
 
 
+class FrontendStaticTests(unittest.TestCase):
+    def test_cars_bulk_selection_uses_master_checkbox_only(self):
+        source = (Path(__file__).parents[1] / "dashboard" / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("All visible cars", source)
+        self.assertIn("cars-list-header", source)
+        self.assertNotIn("Select none", source)
+
+
 class HttpIntegrationTests(unittest.TestCase):
-    def make(self, password):
-        config = app.DashboardConfig(config_path=Path("nonexistent.json"), user="admin", password=password)
+    def make(self, password, config_path=Path("nonexistent.json")):
+        config = app.DashboardConfig(config_path=config_path, user="admin", password=password)
         httpd = app.make_server(config, host="127.0.0.1", port=0)
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
@@ -329,6 +338,67 @@ class HttpIntegrationTests(unittest.TestCase):
         finally:
             httpd.shutdown()
             httpd.server_close()
+
+    def test_access_requests_do_not_log_to_stderr(self):
+        httpd, port = self.make("")
+        stderr = io.StringIO()
+        try:
+            with patch.object(app.sys, "stderr", stderr):
+                with self.get(port, "/api/metadata") as resp:
+                    self.assertEqual(resp.status, 200)
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+        self.assertNotIn("[dashboard]", stderr.getvalue())
+
+    def test_config_merges_env_passwords(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            form = config_io.launcher_to_form({})
+            form["server"]["driver_password"] = "saved-driver"
+            form["server"]["admin_password"] = "saved-admin"
+            form["server"]["spectator_password"] = "saved-spectator"
+            config_path = Path(tmp) / "server_launcher.json"
+            config_path.write_text(json.dumps(config_io.form_to_launcher(form)), encoding="utf-8")
+
+            httpd, port = self.make("", config_path=config_path)
+            try:
+                with patch.dict(
+                    os.environ,
+                    {
+                        "SERVER_DRIVER_PASSWORD": "env-driver",
+                        "SERVER_ADMIN_PASSWORD": "env-admin",
+                        "SERVER_SPECTATOR_PASSWORD": "env-spectator",
+                    },
+                    clear=False,
+                ):
+                    with self.get(port, "/api/config") as resp:
+                        body = json.loads(resp.read())
+            finally:
+                httpd.shutdown()
+                httpd.server_close()
+
+        server = body["form"]["server"]
+        self.assertEqual(server["driver_password"], "env-driver")
+        self.assertEqual(server["admin_password"], "env-admin")
+        self.assertEqual(server["spectator_password"], "env-spectator")
+
+    def test_config_returns_env_passwords_without_saved_file(self):
+        httpd, port = self.make("")
+        try:
+            with patch.dict(
+                os.environ,
+                {"SERVER_DRIVER_PASSWORD": "env-driver", "SERVER_ADMIN_PASSWORD": "env-admin"},
+                clear=False,
+            ):
+                with self.get(port, "/api/config") as resp:
+                    body = json.loads(resp.read())
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+
+        server = body["form"]["server"]
+        self.assertEqual(server["driver_password"], "env-driver")
+        self.assertEqual(server["admin_password"], "env-admin")
 
 
 if __name__ == "__main__":
