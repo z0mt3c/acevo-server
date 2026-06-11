@@ -344,6 +344,167 @@ def launcher_to_form(doc: dict, cfg: dict | None = None) -> dict:
     return {"server": server_form, "event": event_form, "cars": cars_form, "sessions": sessions_form}
 
 
+# --- runtime docs -> form -------------------------------------------------------------------
+
+
+def _session_defaults(cfg: dict, prefix: str) -> dict:
+    return cfg["session_defaults"].get(prefix.upper(), {})
+
+
+def _session_default_seconds(defaults: dict, fallback_minutes: int = 5) -> int:
+    return _as_int(defaults.get("duration_minutes"), fallback_minutes) * 60
+
+
+def _runtime_session_form(game: dict, name: str, defaults: dict) -> dict:
+    time_of_day = game.get(f"{name}_time_of_day", {})
+    if not isinstance(time_of_day, dict):
+        time_of_day = {}
+    return {
+        "length_sec": _as_int(game.get(f"{name}_duration"), _session_default_seconds(defaults)),
+        "hour": _as_int(time_of_day.get("hour"), _as_int(defaults.get("hour"), 16)),
+        "minute": _as_int(time_of_day.get("minute"), _as_int(defaults.get("minute"), 0)),
+        "time_multiplier": _as_int(
+            time_of_day.get("time_multiplier"),
+            _as_int(defaults.get("time_multiplier"), 1),
+        ),
+        "max_wait_to_box": _as_int(
+            game.get(f"{name}_max_wait_to_box"),
+            _as_int(defaults.get("max_wait_to_box_seconds"), 10),
+        ),
+        "overtime_waiting_next_session": _as_int(
+            game.get(f"{name}_overtime_waiting_next_session"),
+            _as_int(defaults.get("overtime_waiting_next_session_seconds"), 10),
+        ),
+        "min_waiting_for_players": _as_int(defaults.get("min_waiting_for_players_seconds"), 10),
+        "max_waiting_for_players": _as_int(defaults.get("max_waiting_for_players_seconds"), 30),
+    }
+
+
+def _runtime_race_session_form(game: dict, defaults: dict) -> dict:
+    form = _runtime_session_form(game, "race", defaults)
+    duration_type = _as_str(game.get("race_duration_type")) or lp.RACE_DURATION_TYPE_TIME
+    form["duration_type"] = duration_type
+    if _is_laps(duration_type):
+        form["laps"] = _as_int(game.get("race_duration"), _as_int(defaults.get("duration_laps"), 10))
+        form["length_sec"] = _session_default_seconds(defaults, 25)
+    else:
+        form["laps"] = _as_int(defaults.get("duration_laps"), 10)
+    form["min_waiting_for_players"] = _as_int(
+        game.get("min_waiting_for_players"),
+        _as_int(defaults.get("min_waiting_for_players_seconds"), 10),
+    )
+    form["max_waiting_for_players"] = _as_int(
+        game.get("max_waiting_for_players"),
+        _as_int(defaults.get("max_waiting_for_players_seconds"), 30),
+    )
+    return form
+
+
+def _runtime_track_token(season_doc: dict, cfg: dict) -> str:
+    track = season_doc.get("event", {})
+    if isinstance(track, dict):
+        try:
+            return lp.track_token(track)
+        except (KeyError, TypeError, ValueError):
+            pass
+    event = {"type": _as_str(season_doc.get("game_type")) or cfg["event_defaults"]["type"]}
+    return _default_track_token(cfg, event)
+
+
+def _runtime_cars_form(server_doc: dict, cfg: dict) -> list[dict]:
+    selected: dict[str, dict] = {}
+    for entry in server_doc.get("allowed_cars_list_full") or []:
+        if not isinstance(entry, dict):
+            continue
+        name = _as_str(_get(entry, "car_name", "name", "Name"))
+        if not name:
+            continue
+        selected[name] = {
+            "ballast": _as_float(_get(entry, "ballast", "Ballast", default=0.0)),
+            "restrictor": _as_float(_get(entry, "restrictor", "Restrictor", default=0.0)),
+        }
+
+    return [
+        {
+            "name": car["internal_name"],
+            "is_selected": car["internal_name"] in selected,
+            "ballast": selected.get(car["internal_name"], {}).get("ballast", 0.0),
+            "restrictor": selected.get(car["internal_name"], {}).get("restrictor", 0.0),
+        }
+        for car in cfg["cars_data"]
+    ]
+
+
+def runtime_documents_to_form(server_doc: dict, season_doc: dict, cfg: dict | None = None) -> dict:
+    cfg = cfg or lp.load_config()
+    game = season_doc.get("game_config", {}) if isinstance(season_doc, dict) else {}
+    if not isinstance(game, dict):
+        game = {}
+
+    track = season_doc.get("event", {}) if isinstance(season_doc, dict) else {}
+    max_players = _as_int(server_doc.get("max_players"), int(cfg["server_defaults"]["max_players"]))
+    max_players_limit = (
+        _as_int(track.get("max_pit_slot") if isinstance(track, dict) else None, max_players) or max_players
+    )
+
+    server_form = {
+        "server_name": _as_str(server_doc.get("server_name")) or cfg["server_defaults"]["server_name"],
+        "max_players": max_players,
+        "max_players_limit": max_players_limit,
+        "tcp_port": _as_int(
+            server_doc.get("server_tcp_listener_port"),
+            int(cfg["server_defaults"]["tcp_port"]),
+        ),
+        "udp_port": _as_int(
+            server_doc.get("server_udp_listener_port"),
+            int(cfg["server_defaults"]["udp_port"]),
+        ),
+        "http_port": _as_int(server_doc.get("server_http_port"), int(cfg["server_defaults"]["http_port"])),
+        "server_type": _as_str(server_doc.get("type")) or cfg["server_defaults"]["server_type"],
+        "tuning_type": _as_str(server_doc.get("tuning_type")) or cfg["server_defaults"]["tuning_type"],
+        "cycle_enabled": _as_bool(server_doc.get("cycle"), bool(cfg["server_defaults"]["cycle_enabled"])),
+        "driver_password": _as_str(server_doc.get("driver_password")),
+        "spectator_password": _as_str(server_doc.get("spectator_password")),
+        "admin_password": _as_str(server_doc.get("admin_password")),
+        "results_post_url": _as_str(server_doc.get("results_post_url")),
+        "entry_list_path": _as_str(server_doc.get("entry_list_path")),
+        "results_path": _as_str(server_doc.get("results_path")),
+    }
+    event_form = {
+        "type": _as_str(season_doc.get("game_type")) or cfg["event_defaults"]["type"],
+        "weather": _as_str(season_doc.get("weather_type")) or cfg["event_defaults"]["weather"],
+        "weather_behaviour": _as_str(season_doc.get("weather_behaviour")) or cfg["event_defaults"]["weather_behaviour"],
+        "initial_grip": _as_str(season_doc.get("initial_grip")) or cfg["event_defaults"]["initial_grip"],
+        "track": _runtime_track_token(season_doc, cfg),
+        "show_only_selected": False,
+    }
+    sessions_form = {
+        "practice": _runtime_session_form(game, "practice", _session_defaults(cfg, "PRACTICE")),
+        "qualify": _runtime_session_form(game, "qualify", _session_defaults(cfg, "QUALIFY")),
+        "warmup": _runtime_session_form(game, "warmup", _session_defaults(cfg, "WARMUP")),
+        "race": _runtime_race_session_form(game, _session_defaults(cfg, "RACE")),
+    }
+    return {
+        "server": server_form,
+        "event": event_form,
+        "cars": _runtime_cars_form(server_doc, cfg),
+        "sessions": sessions_form,
+    }
+
+
+def effective_runtime_form(
+    config_path: str | os.PathLike | None = None,
+    env: dict | None = None,
+    cfg: dict | None = None,
+) -> dict:
+    cfg = cfg or lp.load_config()
+    runtime_env = {str(key): str(value) for key, value in (os.environ if env is None else env).items()}
+    if config_path is not None and "SERVER_LAUNCHER_JSON" not in runtime_env:
+        runtime_env["SERVER_LAUNCHER_JSON"] = str(config_path)
+    server_doc, season_doc, _warnings, _report = lp.build_documents_with_report(runtime_env)
+    return runtime_documents_to_form(server_doc, season_doc, cfg)
+
+
 # --- validation + persistence ---------------------------------------------------------------
 
 

@@ -25,29 +25,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 DEFAULT_CONFIG_PATH = Path(os.environ.get("ACEVO_DASHBOARD_CONFIG", "/data/server_launcher.json"))
 DEFAULT_PASSWORD_PLACEHOLDER = "change-me"
-_ENV_PASSWORD_FIELDS = {
-    "SERVER_DRIVER_PASSWORD": "driver_password",
-    "SERVER_ADMIN_PASSWORD": "admin_password",
-    "SERVER_SPECTATOR_PASSWORD": "spectator_password",
-}
 
 
 def _auto_start_enabled() -> bool:
     return os.environ.get("AUTO_START_SERVER", "true").strip().lower() in {"1", "true", "yes", "y", "on"}
-
-
-def apply_env_passwords(form: dict | None, env: dict | None = None) -> dict | None:
-    env = os.environ if env is None else env
-    server_passwords = {}
-    for env_key, field in _ENV_PASSWORD_FIELDS.items():
-        value = env.get(env_key, "")
-        if value != "":
-            server_passwords[field] = str(value)
-    if not server_passwords:
-        return form
-    effective = dict(form or {})
-    effective["server"] = {**(effective.get("server") or {}), **server_passwords}
-    return effective
 
 
 _CONTENT_TYPES = {
@@ -165,7 +146,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             if route == "/api/metadata":
                 return self._send_json(metadata.build_metadata())
             if route == "/api/config":
-                form = apply_env_passwords(config_io.load_saved(self.config.config_path))
+                form = config_io.effective_runtime_form(self.config.config_path, os.environ)
                 return self._send_json({"config_path": str(self.config.config_path), "form": form})
             if route == "/api/server/status":
                 return self._send_json(server_control.status())

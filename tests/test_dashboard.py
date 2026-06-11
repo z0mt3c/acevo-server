@@ -161,6 +161,98 @@ class SaveLoadTests(unittest.TestCase):
         self.assertIsNone(config_io.load_saved(Path("does-not-exist-12345.json")))
 
 
+class RuntimeFormTests(unittest.TestCase):
+    def test_effective_runtime_form_uses_env_values(self):
+        cfg = launch_payloads.load_config()
+        race_track = next(iter(cfg["tracks_by_event"]["GameModeType_RACE_WEEKEND"].values()))
+        selected_car = cfg["cars_data"][0]["internal_name"]
+        other_car = cfg["cars_data"][1]["internal_name"]
+
+        form = config_io.effective_runtime_form(
+            Path("does-not-exist-12345.json"),
+            {
+                "SERVER_NAME": "ENV Server",
+                "SERVER_MAX_PLAYERS": "9",
+                "SERVER_TCP_PORT": "9711",
+                "SERVER_UDP_PORT": "9712",
+                "SERVER_HTTP_PORT": "8091",
+                "SERVER_TYPE": "Unranked",
+                "SERVER_TUNING_TYPE": "TuningDenied",
+                "SERVER_CYCLE_ENABLED": "false",
+                "SERVER_DRIVER_PASSWORD": "driver-env",
+                "SERVER_ADMIN_PASSWORD": "admin-env",
+                "SERVER_SPECTATOR_PASSWORD": "spectator-env",
+                "SERVER_RESULTS_POST_URL": "https://results.example.test/post",
+                "EVENT_TYPE": "Race_Weekend",
+                "EVENT_TRACK": launch_payloads.track_env_token(race_track),
+                "EVENT_WEATHER": "Rain",
+                "EVENT_WEATHER_BEHAVIOUR": "Dynamic",
+                "EVENT_INITIAL_GRIP": "Green",
+                "EVENT_CARS": selected_car,
+                "PRACTICE_DURATION_MINUTES": "11",
+                "PRACTICE_HOUR": "9",
+                "PRACTICE_MINUTE": "30",
+                "RACE_DURATION_TYPE": "Laps",
+                "RACE_DURATION_LAPS": "7",
+                "RACE_MIN_WAITING_FOR_PLAYERS_SECONDS": "12",
+                "RACE_MAX_WAITING_FOR_PLAYERS_SECONDS": "34",
+            },
+            cfg,
+        )
+
+        self.assertEqual(form["server"]["server_name"], "ENV Server")
+        self.assertEqual(form["server"]["max_players"], 9)
+        self.assertEqual(form["server"]["tcp_port"], 9711)
+        self.assertEqual(form["server"]["udp_port"], 9712)
+        self.assertEqual(form["server"]["http_port"], 8091)
+        self.assertEqual(form["server"]["server_type"], launch_payloads.MAPPINGS["server_type"]["unranked"])
+        self.assertEqual(form["server"]["tuning_type"], launch_payloads.MAPPINGS["tuning_type"]["tuningdenied"])
+        self.assertFalse(form["server"]["cycle_enabled"])
+        self.assertEqual(form["server"]["driver_password"], "driver-env")
+        self.assertEqual(form["server"]["admin_password"], "admin-env")
+        self.assertEqual(form["server"]["spectator_password"], "spectator-env")
+        self.assertEqual(form["server"]["results_post_url"], "https://results.example.test/post")
+        self.assertEqual(form["event"]["type"], launch_payloads.MAPPINGS["event_type"]["race weekend"])
+        self.assertEqual(form["event"]["track"], launch_payloads.track_token(race_track))
+        self.assertEqual(form["event"]["weather"], launch_payloads.MAPPINGS["weather"]["rain"])
+        self.assertEqual(form["event"]["weather_behaviour"], launch_payloads.MAPPINGS["weather_behaviour"]["dynamic"])
+        self.assertEqual(form["event"]["initial_grip"], launch_payloads.MAPPINGS["initial_grip"]["green"])
+        self.assertEqual(form["sessions"]["practice"]["length_sec"], 660)
+        self.assertEqual(form["sessions"]["practice"]["hour"], 9)
+        self.assertEqual(form["sessions"]["practice"]["minute"], 30)
+        self.assertEqual(form["sessions"]["race"]["duration_type"], launch_payloads.MAPPINGS["duration_type"]["laps"])
+        self.assertEqual(form["sessions"]["race"]["laps"], 7)
+        self.assertEqual(form["sessions"]["race"]["min_waiting_for_players"], 12)
+        self.assertEqual(form["sessions"]["race"]["max_waiting_for_players"], 34)
+        selected = {car["name"]: car for car in form["cars"] if car["is_selected"]}
+        self.assertIn(selected_car, selected)
+        self.assertNotIn(other_car, selected)
+
+    def test_effective_runtime_form_env_wins_over_saved_file(self):
+        cfg = launch_payloads.load_config()
+        race_track = next(iter(cfg["tracks_by_event"]["GameModeType_RACE_WEEKEND"].values()))
+        saved = config_io.launcher_to_form({}, cfg)
+        saved["server"]["server_name"] = "Saved Server"
+        saved["event"]["type"] = launch_payloads.MAPPINGS["event_type"]["practice"]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "server_launcher.json"
+            config_path.write_text(json.dumps(config_io.form_to_launcher(saved, cfg)), encoding="utf-8")
+            form = config_io.effective_runtime_form(
+                config_path,
+                {
+                    "SERVER_NAME": "ENV Server",
+                    "EVENT_TYPE": "Race_Weekend",
+                    "EVENT_TRACK": launch_payloads.track_env_token(race_track),
+                },
+                cfg,
+            )
+
+        self.assertEqual(form["server"]["server_name"], "ENV Server")
+        self.assertEqual(form["event"]["type"], launch_payloads.MAPPINGS["event_type"]["race weekend"])
+        self.assertEqual(form["event"]["track"], launch_payloads.track_token(race_track))
+
+
 class FakeProc:
     """Minimal stand-in for subprocess.Popen. ``alive_polls`` poll() calls return None
     (still running) before the process is reported as finished with ``poll_result``."""
@@ -369,7 +461,7 @@ class HttpIntegrationTests(unittest.TestCase):
                         "SERVER_ADMIN_PASSWORD": "env-admin",
                         "SERVER_SPECTATOR_PASSWORD": "env-spectator",
                     },
-                    clear=False,
+                    clear=True,
                 ):
                     with self.get(port, "/api/config") as resp:
                         body = json.loads(resp.read())
@@ -388,7 +480,7 @@ class HttpIntegrationTests(unittest.TestCase):
             with patch.dict(
                 os.environ,
                 {"SERVER_DRIVER_PASSWORD": "env-driver", "SERVER_ADMIN_PASSWORD": "env-admin"},
-                clear=False,
+                clear=True,
             ):
                 with self.get(port, "/api/config") as resp:
                     body = json.loads(resp.read())
@@ -399,6 +491,41 @@ class HttpIntegrationTests(unittest.TestCase):
         server = body["form"]["server"]
         self.assertEqual(server["driver_password"], "env-driver")
         self.assertEqual(server["admin_password"], "env-admin")
+
+    def test_config_returns_runtime_env_values(self):
+        cfg = launch_payloads.load_config()
+        race_track = next(iter(cfg["tracks_by_event"]["GameModeType_RACE_WEEKEND"].values()))
+        selected_car = cfg["cars_data"][0]["internal_name"]
+        httpd, port = self.make("")
+        try:
+            with patch.dict(
+                os.environ,
+                {
+                    "SERVER_NAME": "ENV API Server",
+                    "SERVER_MAX_PLAYERS": "12",
+                    "EVENT_TYPE": "Race_Weekend",
+                    "EVENT_TRACK": launch_payloads.track_env_token(race_track),
+                    "EVENT_CARS": selected_car,
+                    "RACE_DURATION_TYPE": "Laps",
+                    "RACE_DURATION_LAPS": "8",
+                },
+                clear=True,
+            ):
+                with self.get(port, "/api/config") as resp:
+                    body = json.loads(resp.read())
+        finally:
+            httpd.shutdown()
+            httpd.server_close()
+
+        form = body["form"]
+        self.assertEqual(form["server"]["server_name"], "ENV API Server")
+        self.assertEqual(form["server"]["max_players"], 12)
+        self.assertEqual(form["event"]["type"], launch_payloads.MAPPINGS["event_type"]["race weekend"])
+        self.assertEqual(form["event"]["track"], launch_payloads.track_token(race_track))
+        self.assertEqual(form["sessions"]["race"]["duration_type"], launch_payloads.MAPPINGS["duration_type"]["laps"])
+        self.assertEqual(form["sessions"]["race"]["laps"], 8)
+        selected = {car["name"] for car in form["cars"] if car["is_selected"]}
+        self.assertEqual(selected, {selected_car})
 
 
 if __name__ == "__main__":
