@@ -38,11 +38,11 @@ def _auto_start_enabled() -> bool:
 
 def apply_env_passwords(form: dict | None, env: dict | None = None) -> dict | None:
     env = os.environ if env is None else env
-    server_passwords = {
-        field: str(value)
-        for env_key, field in _ENV_PASSWORD_FIELDS.items()
-        if (value := env.get(env_key, "")) != ""
-    }
+    server_passwords = {}
+    for env_key, field in _ENV_PASSWORD_FIELDS.items():
+        value = env.get(env_key, "")
+        if value != "":
+            server_passwords[field] = str(value)
     if not server_passwords:
         return form
     effective = dict(form or {})
