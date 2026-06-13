@@ -161,6 +161,53 @@ class SaveLoadTests(unittest.TestCase):
         self.assertIsNone(config_io.load_saved(Path("does-not-exist-12345.json")))
 
 
+class ProfilesTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.cfg_path = self.tmp / "server_launcher.json"
+
+    def _form(self, server_name="Race Night"):
+        form = config_io.launcher_to_form(load_fixture())
+        form["server"]["server_name"] = server_name
+        return form
+
+    def test_save_list_load_delete_round_trip(self):
+        form = self._form("Race Night")
+        result = config_io.save_profile("Race Night", form, self.cfg_path)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["warnings"], [])
+
+        profiles = config_io.list_profiles(self.cfg_path)
+        self.assertEqual([p["name"] for p in profiles], ["Race Night"])
+        self.assertEqual(profiles[0]["server_name"], "Race Night")
+
+        loaded = config_io.load_profile("Race Night", self.cfg_path)
+        self.assertEqual(loaded["server"]["server_name"], "Race Night")
+        self.assertEqual(loaded["event"]["track"], form["event"]["track"])
+        selected_saved = {c["name"] for c in form["cars"] if c["is_selected"]}
+        selected_loaded = {c["name"] for c in loaded["cars"] if c["is_selected"]}
+        self.assertEqual(selected_loaded, selected_saved)
+
+        self.assertTrue(config_io.delete_profile("Race Night", self.cfg_path)["ok"])
+        self.assertEqual(config_io.list_profiles(self.cfg_path), [])
+        self.assertIsNone(config_io.load_profile("Race Night", self.cfg_path))
+
+    def test_list_empty_without_dir(self):
+        self.assertEqual(config_io.list_profiles(self.cfg_path), [])
+
+    def test_safe_profile_name_strips_traversal(self):
+        self.assertIsNone(config_io._safe_profile_name(""))
+        self.assertIsNone(config_io._safe_profile_name(".."))
+        self.assertEqual(config_io._safe_profile_name("a/b"), "ab")
+        self.assertNotIn("/", config_io._safe_profile_name("../evil"))
+        self.assertNotIn("\\", config_io._safe_profile_name("a\\b"))
+
+    def test_save_invalid_name_errors(self):
+        self.assertFalse(config_io.save_profile("..", self._form(), self.cfg_path)["ok"])
+        self.assertFalse(config_io.save_profile("/", self._form(), self.cfg_path)["ok"])
+
+
 class RuntimeFormTests(unittest.TestCase):
     def test_effective_runtime_form_uses_env_values(self):
         cfg = launch_payloads.load_config()

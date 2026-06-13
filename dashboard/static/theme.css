@@ -216,6 +216,32 @@ md-outlined-select {
   width: 100%;
 }
 
+/* Configuration profiles bar */
+.profiles-bar {
+  grid-column: 1 / -1;
+}
+
+.profiles-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profiles-controls #profile-select {
+  width: auto;
+  flex: 0 1 320px;
+}
+
+.profiles-controls #profile-name {
+  width: auto;
+  flex: 0 1 220px;
+}
+
+.profiles-spacer {
+  flex: 1 1 auto;
+}
+
 .switch-row {
   display: flex;
   align-items: center;

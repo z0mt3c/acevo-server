@@ -69,16 +69,15 @@ Environment variables override values from `server_launcher.json`.
 
 ## Web Dashboard
 
-The container ships a built-in web dashboard that mirrors the official Windows "AC EVO Server Launcher". It starts automatically with the container — after `docker compose up`, just open **`http://<host>:8090`** in a browser (change the port with `DASHBOARD_PORT`).
+Just open **`http://<host>:8090`** in a browser (change the port with `DASHBOARD_PORT`). Protect it by setting `DASHBOARD_USER` / `DASHBOARD_PASSWORD` (an empty password makes it public).
 
 From the dashboard you can:
 
-- Configure everything visually — server name, ports, passwords, cars, track, weather, and session timing — in a light or dark theme, with live validation as you edit.
-- **Start**, **Stop**, and **Restart** the server and watch its log. **Save & Apply** saves your settings and restarts the server so they take effect.
+- Configure everything visually — server name, ports, passwords, cars, track, weather etc.
+- Start/Stop/Restart the server
+- Watch live logs
 
-The dashboard stays available even if the server itself stops, so you can fix the configuration and start it again. Protect it by setting `DASHBOARD_USER` / `DASHBOARD_PASSWORD` in `.env` (an empty password makes it public) and expose it only on a trusted network.
-
-> **Windows:** start the stack with `docker compose -f docker-compose.winvol.yml up -d` instead (see the file header for the one-time `docker volume create acevo_data`).
+> **Windows:** start the stack with `docker compose -f docker-compose.winvol.yml up -d` instead.
 
 ## Docker Compose Examples
 

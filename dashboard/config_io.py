@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -548,3 +549,86 @@ def load_saved(path: str | os.PathLike, cfg: dict | None = None) -> dict | None:
     except (OSError, ValueError):
         return None
     return launcher_to_form(doc, cfg)
+
+
+# --- named configuration profiles -----------------------------------------------------------
+# Profiles are launcher-format JSON files in <config dir>/configs/<name>.json — a library you
+# load from, separate from the active server_launcher.json the server actually runs.
+
+_PROFILE_NAME_RE = re.compile(r"[^A-Za-z0-9 ._-]")
+
+
+def profiles_dir(config_path: str | os.PathLike) -> Path:
+    return Path(config_path).parent / "configs"
+
+
+def _safe_profile_name(name) -> str | None:
+    """Sanitize a profile name to a safe filename stem (no path traversal). None if unusable."""
+    cleaned = _PROFILE_NAME_RE.sub("", _as_str(name)).strip()
+    if not cleaned or cleaned in {".", ".."}:
+        return None
+    return cleaned
+
+
+def list_profiles(config_path: str | os.PathLike) -> list[dict]:
+    directory = profiles_dir(config_path)
+    if not directory.is_dir():
+        return []
+    profiles: list[dict] = []
+    for path in sorted(directory.glob("*.json")):
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        server = doc.get("Server", {}) if isinstance(doc, dict) else {}
+        event = doc.get("Event", {}) if isinstance(doc, dict) else {}
+        profiles.append(
+            {
+                "name": path.stem,
+                "server_name": _as_str(_get(server, "ServerName", "server_name")),
+                "track": _as_str(_get(event, "SelectedTrackValue", "track")),
+                "mode": _as_str(_get(event, "SelectedSessionTypeValue", "type")),
+                "modified": path.stat().st_mtime,
+            }
+        )
+    return profiles
+
+
+def save_profile(name, form: dict, config_path: str | os.PathLike, cfg: dict | None = None) -> dict:
+    cfg = cfg or lp.load_config()
+    safe = _safe_profile_name(name)
+    if not safe:
+        return {"ok": False, "error": "invalid profile name"}
+    doc = form_to_launcher(form, cfg)
+    result = _validate_doc(doc)
+    directory = profiles_dir(config_path)
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"{safe}.json"
+    target.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    result["ok"] = True
+    result["name"] = safe
+    result["path"] = str(target)
+    return result
+
+
+def load_profile(name, config_path: str | os.PathLike, cfg: dict | None = None) -> dict | None:
+    cfg = cfg or lp.load_config()
+    safe = _safe_profile_name(name)
+    if not safe:
+        return None
+    target = profiles_dir(config_path) / f"{safe}.json"
+    return load_saved(target, cfg)
+
+
+def delete_profile(name, config_path: str | os.PathLike) -> dict:
+    safe = _safe_profile_name(name)
+    if not safe:
+        return {"ok": False, "error": "invalid profile name"}
+    target = profiles_dir(config_path) / f"{safe}.json"
+    try:
+        target.unlink()
+    except FileNotFoundError:
+        return {"ok": False, "error": "profile not found"}
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)}
+    return {"ok": True, "name": safe}

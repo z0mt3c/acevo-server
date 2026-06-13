@@ -148,6 +148,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
             if route == "/api/config":
                 form = config_io.effective_runtime_form(self.config.config_path, os.environ)
                 return self._send_json({"config_path": str(self.config.config_path), "form": form})
+            if route == "/api/configs":
+                return self._send_json({"profiles": config_io.list_profiles(self.config.config_path)})
+            if route == "/api/configs/get":
+                name = (parse_qs(parts.query).get("name") or [""])[0]
+                form = config_io.load_profile(name, self.config.config_path)
+                if form is None:
+                    return self._send_json({"error": "profile not found"}, 404)
+                return self._send_json({"name": name, "form": form})
             if route == "/api/server/status":
                 return self._send_json(server_control.status())
             if route == "/api/server/logs":
@@ -165,11 +173,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if body is None:
             return self._send_json({"error": "invalid JSON body"}, 400)
         form = body.get("form", body) if isinstance(body, dict) else {}
+        name = body.get("name") if isinstance(body, dict) else None
         try:
             if route == "/api/validate":
                 return self._send_json(config_io.validate(form))
             if route == "/api/save":
                 return self._send_json(config_io.save(form, self.config.config_path))
+            if route == "/api/configs/save":
+                return self._send_json(config_io.save_profile(name, form, self.config.config_path))
+            if route == "/api/configs/delete":
+                return self._send_json(config_io.delete_profile(name, self.config.config_path))
             if route == "/api/server/start":
                 return self._send_json(server_control.start())
             if route == "/api/server/stop":

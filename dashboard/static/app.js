@@ -591,6 +591,14 @@ function renderSessions() {
   }
 }
 
+function renderAll() {
+  renderServer();
+  renderAdvanced();
+  renderEvent();
+  renderCars();
+  renderSessions();
+}
+
 function renderPreview(result) {
   const panel = byId("preview");
   panel.innerHTML = "";
@@ -715,6 +723,88 @@ async function runValidate() {
   } catch (err) {
     renderPreview({ error: String(err) });
   }
+}
+
+// --- configuration profiles -----------------------------------------------------------------
+
+async function loadProfiles() {
+  const select = byId("profile-select");
+  if (!select) return;
+  const previous = select.value;
+  let data = { profiles: [] };
+  try {
+    data = await api.get("/api/configs");
+  } catch {
+    /* keep empty list */
+  }
+  select.innerHTML = "";
+  const placeholder = document.createElement("md-select-option");
+  placeholder.value = "";
+  placeholder.textContent = "Load a saved profile…";
+  select.append(placeholder);
+  for (const profile of data.profiles || []) {
+    const option = document.createElement("md-select-option");
+    option.value = profile.name;
+    option.textContent = profile.server_name ? `${profile.name} — ${profile.server_name}` : profile.name;
+    select.append(option);
+  }
+  const names = (data.profiles || []).map((p) => p.name);
+  select.value = names.includes(previous) ? previous : "";
+}
+
+async function onProfileSelected() {
+  const name = byId("profile-select").value;
+  if (!name) return;
+  let res;
+  try {
+    res = await api.get(`/api/configs/get?name=${encodeURIComponent(name)}`);
+  } catch (err) {
+    toast("Load failed: " + err);
+    return;
+  }
+  if (!res || res.error || !res.form) {
+    toast("Load failed: " + (res && res.error ? res.error : "unknown"));
+    return;
+  }
+  loadForm(res.form);
+  renderAll();
+  runValidate();
+  toast(`Loaded profile "${name}"`);
+}
+
+async function saveProfile() {
+  const field = byId("profile-name");
+  const name = (field.value || "").trim();
+  if (!name) {
+    toast("Enter a profile name first.");
+    return;
+  }
+  const res = await api.post("/api/configs/save", { name, form: buildForm() });
+  if (!res.ok) {
+    toast("Save failed: " + (res.error || "unknown"));
+    return;
+  }
+  const warned = res.warnings && res.warnings.length ? ` (${res.warnings.length} warning(s))` : "";
+  toast(`Profile "${res.name}" saved` + warned);
+  field.value = "";
+  await loadProfiles();
+  byId("profile-select").value = res.name;
+}
+
+async function deleteProfile() {
+  const name = byId("profile-select").value;
+  if (!name) {
+    toast("Select a profile to delete.");
+    return;
+  }
+  if (!(await confirmDialog(`Delete profile "${name}"?`, "Delete profile"))) return;
+  const res = await api.post("/api/configs/delete", { name });
+  if (!res.ok) {
+    toast("Delete failed: " + (res.error || "unknown"));
+    return;
+  }
+  toast(`Profile "${name}" deleted`);
+  await loadProfiles();
 }
 
 // --- server control + status ----------------------------------------------------------------
@@ -916,6 +1006,9 @@ function wireControls() {
   byId("btn-restart").addEventListener("click", doRestart);
   byId("btn-save").addEventListener("click", doSave);
   byId("btn-save-apply").addEventListener("click", doSaveApply);
+  byId("profile-select").addEventListener("change", onProfileSelected);
+  byId("btn-profile-save").addEventListener("click", saveProfile);
+  byId("btn-profile-delete").addEventListener("click", deleteProfile);
   byId("tab-config").addEventListener("click", () => setActiveView("config"));
   byId("tab-logs").addEventListener("click", () => setActiveView("logs"));
   byId("log-tail-preset").addEventListener("change", handleLogTailPreset);
@@ -938,14 +1031,11 @@ async function init() {
   loadForm(cfg.form);
   byId("config-path").textContent = cfg.config_path || "—";
 
-  renderServer();
-  renderAdvanced();
-  renderEvent();
-  renderCars();
-  renderSessions();
+  renderAll();
   wireControls();
   setActiveView("config");
 
+  loadProfiles();
   runValidate();
   refreshStatus();
   setInterval(refreshStatus, 6000);
