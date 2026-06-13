@@ -6,13 +6,18 @@
 [![Docker Image Size](https://img.shields.io/docker/image-size/zino1337/acevo-server/latest?cacheSeconds=3600)](https://hub.docker.com/r/zino1337/acevo-server)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/zino1337/acevo-server)
 
+<p align="center">
+  <img src="docs/dashboard.png" alt="AC EVO Server web dashboard — light and dark" width="960" />
+</p>
+
 Highly customizable Assetto Corsa Evo Dedicated Server running on Linux via Proton.<br/>
-Configure server and event settings via environment variables.<br/>
+Configure server and event settings via environment variables, web dashboard or server_launcher.json.<br/>
 Copy `.env.example` to `.env` and start with Docker Compose.<br/>
 Not affiliated with Kunos Simulazioni or Assetto Corsa.
 
 ## Features
 
+- Web dashboard to configure and control the server from the browser
 - Environment variables or server_launcher.json for easy server configuration
 - SteamCMD auto-update
 - Practice and Race Weekend support
@@ -65,6 +70,19 @@ Environment variables override values from `server_launcher.json`.
 | `9700` | TCP      | yes     | Server TCP port   |
 | `9700` | UDP      | yes     | Server UDP port   |
 | `8080` | TCP      | yes     | HTTP/listing port |
+| `8090` | TCP      | yes     | Web dashboard     |
+
+## Web Dashboard
+
+Just open **`http://<host>:8090`** in a browser (change the port with `DASHBOARD_PORT`). Protect it by setting `DASHBOARD_USER` / `DASHBOARD_PASSWORD` (an empty password makes it public).
+
+From the dashboard you can:
+
+- Configure everything visually — server name, ports, passwords, cars, track, weather etc.
+- Start/Stop/Restart the server
+- Watch live logs
+
+> **Windows:** start the stack with `docker compose -f docker-compose.winvol.yml up -d` instead.
 
 ## Docker Compose Examples
 
@@ -83,7 +101,11 @@ Set or adjust in `.env` or in the docker compose file.
 | Name                                             | Default                        | Type    | Description                                                                                                    |
 | ------------------------------------------------ | ------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
 | `ACEVO_FORCE_SOFTWARE_RENDERING`                 | `true`                         | boolean | Forces Proton/WineD3D and Mesa llvmpipe software rendering for broad no-GPU host compatibility.                |
+| `AUTO_START_SERVER`                              | `true`                         | boolean | Start the AC EVO server automatically when the container starts (the dashboard can stop/restart it).           |
 | `AUTO_UPDATE`                                    | `true`                         | boolean | Updates the dedicated server before startup.                                                                   |
+| `DASHBOARD_PASSWORD`                             | empty                          | string  | Web dashboard Basic Auth password; empty disables auth (public). See the Web Dashboard section.                |
+| `DASHBOARD_PORT`                                 | `8090`                         | integer | Port the web dashboard listens on.                                                                             |
+| `DASHBOARD_USER`                                 | `admin`                        | string  | Web dashboard Basic Auth username.                                                                             |
 | `PGID`                                           | `0`                            | integer | Group ID used for mounted volume ownership.                                                                    |
 | `PUID`                                           | `0`                            | integer | User ID used for mounted volume ownership.                                                                     |
 | `SERVER_LAUNCHER_JSON`                           | `/data/server_launcher.json`   | path    | Optional official tool config loaded as base config when present; ENV values override it.                      |
@@ -93,8 +115,7 @@ Set or adjust in `.env` or in the docker compose file.
 | `SERVER_HTTP_PORT`                               | `8080`                         | integer | HTTP/listing port exposed by the server.                                                                       |
 | `SERVER_MAX_PLAYERS`                             | `20`                           | integer | Maximum player slots; downscaled to the selected track maximum if configured too high.                         |
 | `SERVER_NAME`                                    | `AC EVO Nordschleife Trackday` | string  | Public server name.                                                                                            |
-| `SERVER_RESULTS_POST_URL`                        | empty                          | string  | Experimental native result POST endpoint; upstream POST format is not guaranteed documented.                   |
-| `SERVER_RESULTS_TOKEN`                           | empty                          | string  | Optional token for the native result POST endpoint.                                                            |
+| `SERVER_RESULTS_POST_URL`                        | empty                          | string  | Experimental native result POST endpoint; include auth as query params if needed.                              |
 | `SERVER_SPECTATOR_PASSWORD`                      | empty                          | string  | Spectator password.                                                                                            |
 | `SERVER_TCP_PORT`                                | `9700`                         | integer | TCP listener port.                                                                                             |
 | `SERVER_TYPE`                                    | `Ranked`                       | enum    | Server type: `Ranked` or `Unranked`.                                                                           |
