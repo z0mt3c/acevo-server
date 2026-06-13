@@ -11,12 +11,13 @@
 </p>
 
 Highly customizable Assetto Corsa Evo Dedicated Server running on Linux via Proton.<br/>
-Configure server and event settings via environment variables.<br/>
+Configure server and event settings via environment variables, web dashboard or server_launcher.json.<br/>
 Copy `.env.example` to `.env` and start with Docker Compose.<br/>
 Not affiliated with Kunos Simulazioni or Assetto Corsa.
 
 ## Features
 
+- Web dashboard to configure and control the server from the browser
 - Environment variables or server_launcher.json for easy server configuration
 - SteamCMD auto-update
 - Practice and Race Weekend support
