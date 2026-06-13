@@ -6,6 +6,10 @@
 [![Docker Image Size](https://img.shields.io/docker/image-size/zino1337/acevo-server/latest?cacheSeconds=3600)](https://hub.docker.com/r/zino1337/acevo-server)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/zino1337/acevo-server)
 
+<p align="center">
+  <img src="docs/dashboard.png" alt="AC EVO Server web dashboard — light and dark" width="960" />
+</p>
+
 Highly customizable Assetto Corsa Evo Dedicated Server running on Linux via Proton.<br/>
 Configure server and event settings via environment variables.<br/>
 Copy `.env.example` to `.env` and start with Docker Compose.<br/>
