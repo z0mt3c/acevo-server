@@ -43,25 +43,11 @@
       <md-tabs id="main-tabs">
         <md-primary-tab id="tab-config" active>Configuration</md-primary-tab>
         <md-primary-tab id="tab-logs">Logs</md-primary-tab>
+        <md-primary-tab id="tab-profiles">Profiles</md-primary-tab>
       </md-tabs>
     </nav>
 
     <main id="config-view" class="layout">
-      <section class="profiles-bar card">
-        <h2>Configuration profiles</h2>
-        <div class="profiles-controls">
-          <md-outlined-select id="profile-select" label="Saved profiles">
-            <md-select-option value="" selected>Load a saved profile…</md-select-option>
-          </md-outlined-select>
-          <md-icon-button id="btn-profile-delete" aria-label="Delete profile" title="Delete selected profile">
-            <md-icon>delete</md-icon>
-          </md-icon-button>
-          <span class="profiles-spacer"></span>
-          <md-outlined-text-field id="profile-name" label="Profile name"></md-outlined-text-field>
-          <md-filled-tonal-button id="btn-profile-save">Save profile</md-filled-tonal-button>
-        </div>
-      </section>
-
       <section id="col-server">
         <div class="card">
           <h2>Server Info</h2>
@@ -91,6 +77,21 @@
           <h2>Preview &amp; Validation</h2>
           <div id="preview" class="preview"></div>
         </div>
+      </section>
+    </main>
+
+    <main id="profiles-view" class="profiles-view hidden">
+      <section class="card profiles-card">
+        <h2>Configuration profiles</h2>
+        <p class="profiles-hint">
+          Save the current configuration under a name, or load a saved one into the editor. Loading does not apply it —
+          use <strong>Save &amp; Apply</strong> afterwards to run it.
+        </p>
+        <div class="profiles-save-row">
+          <md-outlined-text-field id="profile-name" label="Profile name"></md-outlined-text-field>
+          <md-filled-tonal-button id="btn-profile-save">Save current config</md-filled-tonal-button>
+        </div>
+        <div id="profiles-list" class="profiles-list"></div>
       </section>
     </main>
 

@@ -725,36 +725,68 @@ async function runValidate() {
   }
 }
 
-// --- configuration profiles -----------------------------------------------------------------
+// --- configuration profiles (Profiles tab) --------------------------------------------------
+
+let PROFILES = [];
 
 async function loadProfiles() {
-  const select = byId("profile-select");
-  if (!select) return;
-  const previous = select.value;
-  let data = { profiles: [] };
   try {
-    data = await api.get("/api/configs");
+    const data = await api.get("/api/configs");
+    PROFILES = data.profiles || [];
   } catch {
-    /* keep empty list */
+    PROFILES = [];
   }
-  select.innerHTML = "";
-  const placeholder = document.createElement("md-select-option");
-  placeholder.value = "";
-  placeholder.textContent = "Load a saved profile…";
-  select.append(placeholder);
-  for (const profile of data.profiles || []) {
-    const option = document.createElement("md-select-option");
-    option.value = profile.name;
-    option.textContent = profile.server_name ? `${profile.name} — ${profile.server_name}` : profile.name;
-    select.append(option);
-  }
-  const names = (data.profiles || []).map((p) => p.name);
-  select.value = names.includes(previous) ? previous : "";
+  renderProfiles();
 }
 
-async function onProfileSelected() {
-  const name = byId("profile-select").value;
-  if (!name) return;
+function renderProfiles() {
+  const list = byId("profiles-list");
+  if (!list) return;
+  list.innerHTML = "";
+  if (!PROFILES.length) {
+    const empty = document.createElement("div");
+    empty.className = "profiles-empty";
+    empty.textContent = "No saved profiles yet.";
+    list.append(empty);
+    return;
+  }
+  for (const profile of PROFILES) {
+    const row = document.createElement("div");
+    row.className = "profile-row";
+
+    const info = document.createElement("div");
+    info.className = "profile-info";
+    const name = document.createElement("div");
+    name.className = "profile-name";
+    name.textContent = profile.name;
+    const meta = document.createElement("div");
+    meta.className = "profile-meta";
+    const parts = [];
+    if (profile.server_name) parts.push(profile.server_name);
+    if (profile.mode) parts.push(enumLabel(profile.mode));
+    if (profile.track) parts.push(trackDisplay(profile.track));
+    meta.textContent = parts.join(" · ");
+    info.append(name, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "profile-actions";
+    const loadBtn = document.createElement("md-text-button");
+    loadBtn.textContent = "Load";
+    loadBtn.addEventListener("click", () => applyProfile(profile.name));
+    const delBtn = document.createElement("md-icon-button");
+    delBtn.setAttribute("aria-label", `Delete ${profile.name}`);
+    const delIcon = document.createElement("md-icon");
+    delIcon.textContent = "delete";
+    delBtn.append(delIcon);
+    delBtn.addEventListener("click", () => deleteProfile(profile.name));
+    actions.append(loadBtn, delBtn);
+
+    row.append(info, actions);
+    list.append(row);
+  }
+}
+
+async function applyProfile(name) {
   let res;
   try {
     res = await api.get(`/api/configs/get?name=${encodeURIComponent(name)}`);
@@ -769,7 +801,8 @@ async function onProfileSelected() {
   loadForm(res.form);
   renderAll();
   runValidate();
-  toast(`Loaded profile "${name}"`);
+  setActiveView("config");
+  toast(`Loaded profile "${name}" — review, then Save & Apply`);
 }
 
 async function saveProfile() {
@@ -787,16 +820,11 @@ async function saveProfile() {
   const warned = res.warnings && res.warnings.length ? ` (${res.warnings.length} warning(s))` : "";
   toast(`Profile "${res.name}" saved` + warned);
   field.value = "";
-  await loadProfiles();
-  byId("profile-select").value = res.name;
+  loadProfiles();
 }
 
-async function deleteProfile() {
-  const name = byId("profile-select").value;
-  if (!name) {
-    toast("Select a profile to delete.");
-    return;
-  }
+async function deleteProfile(name) {
+  if (!name) return;
   if (!(await confirmDialog(`Delete profile "${name}"?`, "Delete profile"))) return;
   const res = await api.post("/api/configs/delete", { name });
   if (!res.ok) {
@@ -804,7 +832,7 @@ async function deleteProfile() {
     return;
   }
   toast(`Profile "${name}" deleted`);
-  await loadProfiles();
+  loadProfiles();
 }
 
 // --- server control + status ----------------------------------------------------------------
@@ -905,15 +933,20 @@ function stopLogPolling() {
   logsTimer = null;
 }
 
+const VIEW_INDEX = { config: 0, logs: 1, profiles: 2 };
+
 function setActiveView(view) {
   activeView = view;
   byId("config-view").classList.toggle("hidden", view !== "config");
   byId("logs-view").classList.toggle("hidden", view !== "logs");
+  byId("profiles-view").classList.toggle("hidden", view !== "profiles");
   byId("tab-config").active = view === "config";
   byId("tab-logs").active = view === "logs";
-  byId("main-tabs").activeTabIndex = view === "logs" ? 1 : 0;
+  byId("tab-profiles").active = view === "profiles";
+  byId("main-tabs").activeTabIndex = VIEW_INDEX[view] ?? 0;
   if (view === "logs") startLogPolling();
   else stopLogPolling();
+  if (view === "profiles") loadProfiles();
 }
 
 function normalizeLogTail(value) {
@@ -1006,11 +1039,10 @@ function wireControls() {
   byId("btn-restart").addEventListener("click", doRestart);
   byId("btn-save").addEventListener("click", doSave);
   byId("btn-save-apply").addEventListener("click", doSaveApply);
-  byId("profile-select").addEventListener("change", onProfileSelected);
   byId("btn-profile-save").addEventListener("click", saveProfile);
-  byId("btn-profile-delete").addEventListener("click", deleteProfile);
   byId("tab-config").addEventListener("click", () => setActiveView("config"));
   byId("tab-logs").addEventListener("click", () => setActiveView("logs"));
+  byId("tab-profiles").addEventListener("click", () => setActiveView("profiles"));
   byId("log-tail-preset").addEventListener("change", handleLogTailPreset);
   byId("log-tail-custom").addEventListener("input", scheduleLogRefresh);
   byId("btn-log-refresh").addEventListener("click", refreshLogs);
@@ -1035,7 +1067,6 @@ async function init() {
   wireControls();
   setActiveView("config");
 
-  loadProfiles();
   runValidate();
   refreshStatus();
   setInterval(refreshStatus, 6000);
