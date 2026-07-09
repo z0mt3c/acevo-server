@@ -77,7 +77,7 @@ Open **`http://<host>:8090`** in a browser (change the port with `DASHBOARD_PORT
 
 From the dashboard you can:
 
-- Configure everything visually — server name, ports, passwords, cars, track, weather etc.
+- Configure everything visually - server name, ports, passwords, cars, track, weather etc.
 - Start/Stop/Restart the server
 - Watch live logs
 
@@ -110,7 +110,10 @@ This section is shortened on Docker Hub. See the full table in the GitHub README
 | `SERVER_MAX_PLAYERS`                   | `20`                           | Maximum player slots; downscaled to track max.     |
 | `SERVER_TYPE`                          | `Ranked`                       | `Ranked` or `Unranked`.                            |
 | `SERVER_TUNING_TYPE`                   | `TuningAllowed`                | `TuningAllowed` or `TuningDenied`.                 |
+| `SERVER_ENTRY_LIST_URL`                | empty                          | Remote entry list URL.                             |
+| `SERVER_ENTRY_LIST_PATH`               | empty                          | Local entry list JSON path.                        |
 | `SERVER_RESULTS_POST_URL`              | empty                          | Result POST endpoint; put auth in URL query.       |
+| `SERVER_RESULTS_PATH`                  | empty                          | Local results save folder.                         |
 | `EVENT_TYPE`                           | `Practice`                     | `Practice` or `Race_Weekend`.                      |
 | `EVENT_TRACK`                          | `Nurburgring_Touristenfahrten` | Track token.                                       |
 | `EVENT_CARS`                           | `all`                          | Comma-separated car names/substrings, or `all`.    |

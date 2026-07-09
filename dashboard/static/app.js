@@ -208,6 +208,13 @@ function renderAdvanced() {
   grid.append(
     full(
       textField({
+        label: "Entry List URL",
+        value: s.entry_list_url,
+        oninput: (v) => set(s, "entry_list_url", v),
+      }),
+    ),
+    full(
+      textField({
         label: "Results POST URL",
         value: s.results_post_url,
         oninput: (v) => set(s, "results_post_url", v),

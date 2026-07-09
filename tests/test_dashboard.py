@@ -95,12 +95,48 @@ class FormToLauncherTests(unittest.TestCase):
         cars = doc["Event"]["Cars"]
         self.assertEqual(len(cars), len(launch_payloads.load_config()["cars_data"]))
         sample = cars[0]
-        for key in ("name", "display_name", "IsSelected", "Ballast", "Restrictor", "P1", "is_selected", "ballast"):
+        for key in (
+            "name",
+            "display_name",
+            "IsSelected",
+            "Ballast",
+            "Restrictor",
+            "P1",
+            "is_selected",
+            "ballast",
+            "is_mod",
+            "IsModText",
+            "IsMod",
+        ):
             self.assertIn(key, sample)
+        self.assertFalse(sample["is_mod"])
+        self.assertEqual(sample["IsModText"], "")
+        self.assertFalse(sample["IsMod"])
+        self.assertFalse(doc["Event"]["ShowOnlyOfficial"])
+        self.assertIn("SelectOnlyOfficialCarsCommand", doc["Event"])
         selected = next(c for c in cars if c["name"] == "preset_695b_mech_1")
         self.assertTrue(selected["IsSelected"])
         self.assertEqual(selected["Ballast"], 5)
         self.assertEqual(selected["Restrictor"], 1.5)
+
+    def test_advanced_server_fields_round_trip(self):
+        form = self.base_form("GameModeType_PRACTICE")
+        form["server"]["entry_list_url"] = "https://entry.example.test/list.json"
+        form["server"]["results_post_url"] = "https://results.example.test/post"
+        form["server"]["entry_list_path"] = "C:\\acevo\\entrylist.json"
+        form["server"]["results_path"] = "C:\\acevo\\results"
+
+        doc = config_io.form_to_launcher(form)
+        self.assertEqual(doc["Server"]["EntryListUrl"], "https://entry.example.test/list.json")
+        self.assertEqual(doc["Server"]["ResultsPostUrl"], "https://results.example.test/post")
+        self.assertEqual(doc["Server"]["EntryListPath"], "C:\\acevo\\entrylist.json")
+        self.assertEqual(doc["Server"]["ResultsPath"], "C:\\acevo\\results")
+
+        reloaded = config_io.launcher_to_form(doc)
+        self.assertEqual(reloaded["server"]["entry_list_url"], "https://entry.example.test/list.json")
+        self.assertEqual(reloaded["server"]["results_post_url"], "https://results.example.test/post")
+        self.assertEqual(reloaded["server"]["entry_list_path"], "C:\\acevo\\entrylist.json")
+        self.assertEqual(reloaded["server"]["results_path"], "C:\\acevo\\results")
 
     def test_session_visibility_follows_event_type(self):
         practice = config_io.form_to_launcher(self.base_form("GameModeType_PRACTICE"))
@@ -229,7 +265,10 @@ class RuntimeFormTests(unittest.TestCase):
                 "SERVER_DRIVER_PASSWORD": "driver-env",
                 "SERVER_ADMIN_PASSWORD": "admin-env",
                 "SERVER_SPECTATOR_PASSWORD": "spectator-env",
+                "SERVER_ENTRY_LIST_URL": "https://entry.example.test/list.json",
                 "SERVER_RESULTS_POST_URL": "https://results.example.test/post",
+                "SERVER_ENTRY_LIST_PATH": "/data/entrylist.json",
+                "SERVER_RESULTS_PATH": "/data/results",
                 "EVENT_TYPE": "Race_Weekend",
                 "EVENT_TRACK": launch_payloads.track_env_token(race_track),
                 "EVENT_WEATHER": "Rain",
@@ -258,7 +297,10 @@ class RuntimeFormTests(unittest.TestCase):
         self.assertEqual(form["server"]["driver_password"], "driver-env")
         self.assertEqual(form["server"]["admin_password"], "admin-env")
         self.assertEqual(form["server"]["spectator_password"], "spectator-env")
+        self.assertEqual(form["server"]["entry_list_url"], "https://entry.example.test/list.json")
         self.assertEqual(form["server"]["results_post_url"], "https://results.example.test/post")
+        self.assertEqual(form["server"]["entry_list_path"], "/data/entrylist.json")
+        self.assertEqual(form["server"]["results_path"], "/data/results")
         self.assertEqual(form["event"]["type"], launch_payloads.MAPPINGS["event_type"]["race weekend"])
         self.assertEqual(form["event"]["track"], launch_payloads.track_token(race_track))
         self.assertEqual(form["event"]["weather"], launch_payloads.MAPPINGS["weather"]["rain"])
