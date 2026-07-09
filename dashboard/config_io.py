@@ -155,8 +155,10 @@ def _cars_block(cfg: dict, cars_form: list) -> list[dict]:
                 "property_1": p1,
                 "property_2": p2,
                 "property_3": p3,
+                "is_mod": False,
                 "name": name,
                 "display_name": car.get("display_name", ""),
+                "IsModText": "",
                 "IsSelected": selected,
                 "Ballast": ballast,
                 "Restrictor": restrictor,
@@ -164,6 +166,7 @@ def _cars_block(cfg: dict, cars_form: list) -> list[dict]:
                 "P1": p1,
                 "P2": p2,
                 "P3": p3,
+                "IsMod": False,
             }
         )
     return cars
@@ -195,7 +198,7 @@ def form_to_launcher(form: dict, cfg: dict | None = None) -> dict:
         "DriverPassword": _as_str(server.get("driver_password")),
         "SpectatorPassword": _as_str(server.get("spectator_password")),
         "AdminPassword": _as_str(server.get("admin_password")),
-        "EntryListUrl": "",
+        "EntryListUrl": _as_str(server.get("entry_list_url")),
         "ResultsPostUrl": _as_str(server.get("results_post_url")),
         "EntryListPath": _as_str(server.get("entry_list_path")),
         "ResultsPath": _as_str(server.get("results_path")),
@@ -212,6 +215,8 @@ def form_to_launcher(form: dict, cfg: dict | None = None) -> dict:
         "SelectedTrackValue": track_token,
         "Cars": _cars_block(cfg, form.get("cars", [])),
         "ShowOnlySelected": _as_bool(event.get("show_only_selected"), False),
+        "ShowOnlyOfficial": False,
+        "SelectOnlyOfficialCarsCommand": {"$type": "CommunityToolkit.Mvvm.Input.RelayCommand, CommunityToolkit.Mvvm"},
     }
 
     sessions_block = {
@@ -298,6 +303,7 @@ def launcher_to_form(doc: dict, cfg: dict | None = None) -> dict:
         "driver_password": _as_str(_get(server, "DriverPassword", "driver_password")),
         "spectator_password": _as_str(_get(server, "SpectatorPassword", "spectator_password")),
         "admin_password": _as_str(_get(server, "AdminPassword", "admin_password")),
+        "entry_list_url": _as_str(_get(server, "EntryListUrl", "entry_list_url")),
         "results_post_url": _as_str(_get(server, "ResultsPostUrl", "results_post_url")),
         "entry_list_path": _as_str(_get(server, "EntryListPath", "entry_list_path")),
         "results_path": _as_str(_get(server, "ResultsPath", "results_path")),
@@ -467,6 +473,7 @@ def runtime_documents_to_form(server_doc: dict, season_doc: dict, cfg: dict | No
         "driver_password": _as_str(server_doc.get("driver_password")),
         "spectator_password": _as_str(server_doc.get("spectator_password")),
         "admin_password": _as_str(server_doc.get("admin_password")),
+        "entry_list_url": _as_str(server_doc.get("entry_list_server_url")),
         "results_post_url": _as_str(server_doc.get("results_post_url")),
         "entry_list_path": _as_str(server_doc.get("entry_list_path")),
         "results_path": _as_str(server_doc.get("results_path")),

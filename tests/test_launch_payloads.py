@@ -45,7 +45,10 @@ def launcher_document():
             "DriverPassword": "driver-password",
             "SpectatorPassword": "spectator-password",
             "AdminPassword": "admin-password",
+            "EntryListUrl": "https://entry.example.test/list.json",
             "ResultsPostUrl": "https://results.example.test/launcher",
+            "EntryListPath": "C:\\acevo\\entrylist.json",
+            "ResultsPath": "C:\\acevo\\results",
             "SelectedTuningTypeValue": "TuningDenied",
         },
         "Event": {
@@ -59,6 +62,9 @@ def launcher_document():
                     "IsSelected": True,
                     "name": "preset_695b_mech_1",
                     "display_name": "Abarth 695 Biposto - Standard",
+                    "is_mod": False,
+                    "IsModText": "",
+                    "IsMod": False,
                     "Ballast": 12.5,
                     "Restrictor": 3.0,
                 },
@@ -66,11 +72,18 @@ def launcher_document():
                     "IsSelected": True,
                     "name": "ks_caterham_acmd_mech_1",
                     "display_name": "Caterham Academy - Academy",
+                    "is_mod": False,
+                    "IsModText": "",
+                    "IsMod": False,
                     "Ballast": 0,
                     "Restrictor": 0,
                 },
             ],
             "ShowOnlySelected": False,
+            "ShowOnlyOfficial": False,
+            "SelectOnlyOfficialCarsCommand": {
+                "$type": "CommunityToolkit.Mvvm.Input.RelayCommand, CommunityToolkit.Mvvm"
+            },
         },
         "Sessions": {
             "PracticeSession": {
@@ -231,6 +244,17 @@ class LaunchPayloadTests(unittest.TestCase):
             },
         )
 
+    def test_new_0_8_car_env_tokens_match(self):
+        server_doc, _, warnings = launch_payloads.build_documents(
+            {"EVENT_CARS": "KTM_X_Bow_GT2,KTM_X_Bow_GT4,Volkswagen_Golf_8_R"}
+        )
+
+        self.assertEqual(warnings, [])
+        self.assertEqual(
+            selected_car_names(server_doc),
+            {"preset_xbgt2_mech_1", "preset_xbgt4_mech_1", "preset_mk8r_mech_1"},
+        )
+
     def test_variant_car_env_tokens_are_unique(self):
         server_doc, _, warnings = launch_payloads.build_documents(
             {
@@ -387,7 +411,10 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertFalse(server_doc["cycle"])
         self.assertEqual(server_doc["driver_password"], "driver-password")
         self.assertEqual(server_doc["admin_password"], "admin-password")
+        self.assertEqual(server_doc["entry_list_server_url"], "https://entry.example.test/list.json")
         self.assertEqual(server_doc["results_post_url"], "https://results.example.test/launcher")
+        self.assertEqual(server_doc["entry_list_path"], "C:\\acevo\\entrylist.json")
+        self.assertEqual(server_doc["results_path"], "C:\\acevo\\results")
         self.assertEqual(server_doc["type"], "MultiplayerServerListSessionType_UNRANKED")
         self.assertEqual(server_doc["tuning_type"], "TuningDenied")
 
@@ -415,6 +442,9 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertEqual(resolved(report, "SERVER_NAME")["source"], "json")
         self.assertEqual(resolved(report, "SERVER_TYPE")["source"], "json")
         self.assertEqual(resolved(report, "SERVER_TUNING_TYPE")["source"], "json")
+        self.assertEqual(resolved(report, "SERVER_ENTRY_LIST_URL")["source"], "json")
+        self.assertEqual(resolved(report, "SERVER_ENTRY_LIST_PATH")["source"], "json")
+        self.assertEqual(resolved(report, "SERVER_RESULTS_PATH")["source"], "json")
         self.assertEqual(resolved(report, "EVENT_CARS")["source"], "json")
         self.assertEqual(resolved(report, "RACE_MIN_WAITING_FOR_PLAYERS_SECONDS")["source"], "json")
         self.assertEqual(resolved(report, "RACE_MAX_WAITING_FOR_PLAYERS_SECONDS")["source"], "json")
@@ -601,6 +631,42 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertEqual(season_doc_tourist["event"]["layout"], "Touristenfahrten")
         self.assertEqual(season_doc_tourist["event"]["max_pit_slot"], 50)
 
+        _, season_doc_kyalami_practice, warnings_kyalami_practice = launch_payloads.build_documents(
+            {
+                "EVENT_TYPE": "Practice",
+                "EVENT_TRACK": "Kyalami_GP",
+            }
+        )
+        self.assertEqual(warnings_kyalami_practice, [])
+        self.assertEqual(
+            season_doc_kyalami_practice["event"],
+            {
+                "track": "Kyalami",
+                "layout": "GP",
+                "event_name": "GP Time Attack",
+                "track_length": 4522,
+                "max_pit_slot": 20,
+            },
+        )
+
+        _, season_doc_kyalami_race, warnings_kyalami_race = launch_payloads.build_documents(
+            {
+                "EVENT_TYPE": "Race_Weekend",
+                "EVENT_TRACK": "Kyalami_GP",
+            }
+        )
+        self.assertEqual(warnings_kyalami_race, [])
+        self.assertEqual(
+            season_doc_kyalami_race["event"],
+            {
+                "track": "Kyalami",
+                "layout": "GP",
+                "event_name": "GP Race",
+                "track_length": 4522,
+                "max_pit_slot": 20,
+            },
+        )
+
         _, season_doc_unknown, warnings_unknown = launch_payloads.build_documents(
             {
                 "EVENT_TYPE": "Race_Weekend",
@@ -765,7 +831,7 @@ class LaunchPayloadTests(unittest.TestCase):
         server_doc, _, warnings, report = launch_payloads.build_documents_with_report({})
         self.assertEqual(warnings, [])
         self.assertEqual(selected_car_names(server_doc), all_car_names())
-        self.assertEqual(len(server_doc["allowed_cars_list_full"]), 94)
+        self.assertEqual(len(server_doc["allowed_cars_list_full"]), 97)
         self.assertEqual(resolved(report, "EVENT_CARS")["value"], "all")
         self.assertEqual(resolved(report, "EVENT_CARS")["source"], "default")
         self.assertEqual(resolved(report, "EVENT_CAR_CATEGORY")["value"], "all")
@@ -849,21 +915,32 @@ class LaunchPayloadTests(unittest.TestCase):
         self.assertTrue(any("ban filters removed all allowed cars" in warning for warning in warnings))
         self.assertEqual(selected_car_names(server_doc), all_car_names())
 
-    def test_result_post_settings_are_passed_through(self):
+    def test_entry_and_result_settings_are_passed_through(self):
         server_doc, _, warnings, report = launch_payloads.build_documents_with_report(
-            {"SERVER_RESULTS_POST_URL": "https://results.example.test/acevo?token=result-secret"}
+            {
+                "SERVER_ENTRY_LIST_URL": "https://entry.example.test/list.json",
+                "SERVER_RESULTS_POST_URL": "https://results.example.test/acevo?token=result-secret",
+                "SERVER_ENTRY_LIST_PATH": "/data/entrylist.json",
+                "SERVER_RESULTS_PATH": "/data/results",
+            }
         )
         self.assertEqual(warnings, [])
 
+        self.assertEqual(server_doc["entry_list_server_url"], "https://entry.example.test/list.json")
         self.assertEqual(server_doc["results_post_url"], "https://results.example.test/acevo?token=result-secret")
         self.assertEqual(server_doc["token"], "")
-        self.assertEqual(server_doc["results_path"], "")
-        self.assertEqual(server_doc["entry_list_path"], "")
-        self.assertEqual(server_doc["entry_list_server_url"], "")
+        self.assertEqual(server_doc["entry_list_path"], "/data/entrylist.json")
+        self.assertEqual(server_doc["results_path"], "/data/results")
+        self.assertEqual(
+            resolved(report, "SERVER_ENTRY_LIST_URL")["value"],
+            "https://entry.example.test/list.json",
+        )
         self.assertEqual(
             resolved(report, "SERVER_RESULTS_POST_URL")["value"],
             "https://results.example.test/acevo?token=result-secret",
         )
+        self.assertEqual(resolved(report, "SERVER_ENTRY_LIST_PATH")["value"], "/data/entrylist.json")
+        self.assertEqual(resolved(report, "SERVER_RESULTS_PATH")["value"], "/data/results")
 
     def test_result_token_env_is_ignored_as_unknown(self):
         server_doc, _, warnings, report = launch_payloads.build_documents_with_report(

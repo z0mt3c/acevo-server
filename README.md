@@ -112,10 +112,13 @@ Set or adjust in `.env` or in the docker compose file.
 | `SERVER_ADMIN_PASSWORD`                          | empty                          | string  | Admin password.                                                                                                |
 | `SERVER_CYCLE_ENABLED`                           | `true`                         | boolean | Enables session/event cycling when supported by the server.                                                    |
 | `SERVER_DRIVER_PASSWORD`                         | empty                          | string  | Driver password.                                                                                               |
+| `SERVER_ENTRY_LIST_PATH`                         | empty                          | path    | Local entry list JSON path passed to the server.                                                               |
+| `SERVER_ENTRY_LIST_URL`                          | empty                          | URL     | Remote entry list JSON URL passed to the server.                                                               |
 | `SERVER_HTTP_PORT`                               | `8080`                         | integer | HTTP/listing port exposed by the server.                                                                       |
 | `SERVER_MAX_PLAYERS`                             | `20`                           | integer | Maximum player slots; downscaled to the selected track maximum if configured too high.                         |
 | `SERVER_NAME`                                    | `AC EVO Nordschleife Trackday` | string  | Public server name.                                                                                            |
 | `SERVER_RESULTS_POST_URL`                        | empty                          | string  | Experimental native result POST endpoint; include auth as query params if needed.                              |
+| `SERVER_RESULTS_PATH`                            | empty                          | path    | Local results output folder passed to the server.                                                              |
 | `SERVER_SPECTATOR_PASSWORD`                      | empty                          | string  | Spectator password.                                                                                            |
 | `SERVER_TCP_PORT`                                | `9700`                         | integer | TCP listener port.                                                                                             |
 | `SERVER_TYPE`                                    | `Ranked`                       | enum    | Server type: `Ranked` or `Unranked`.                                                                           |
@@ -249,6 +252,8 @@ You can set multiple cars separated by commas, like `EVENT_CARS=Toyota_GR86_True
 | `Honda_S2000_AP1`                                             | Honda S2000 AP1 - Standard                                      | 9.9   |
 | `Hyundai_i30_N_Hatchback_Performance`                         | Hyundai i30 N Hatchback - Performance                           | 9.4   |
 | `Hyundai_i30_N_Hatchback_Performance_N_Limited`               | Hyundai i30 N Hatchback - Performance N Limited                 | 9.6   |
+| `KTM_X_Bow_GT2`                                               | KTM X-Bow GT2 - GT2                                             | 19.3  |
+| `KTM_X_Bow_GT4`                                               | KTM X-Bow GT4 - GT4                                             | 19.0  |
 | `Lamborghini_Countach_LP5000_QV`                              | Lamborghini Countach LP5000 QV - LP5000 QV                      | 9.5   |
 | `Lamborghini_Huracan_ST_EVO2`                                 | Lamborghini Huracan ST EVO2 - Super Trofeo                      | 18.4  |
 | `Lamborghini_Huracan_STO_Road`                                | Lamborghini Huracan STO - Road                                  | 15.1  |
@@ -294,6 +299,7 @@ You can set multiple cars separated by commas, like `EVENT_CARS=Toyota_GR86_True
 | `Toyota_Supra_MKIV_Drift`                                     | Toyota Supra MKIV - Drift                                       | 13.0  |
 | `Toyota_Supra_MKIV_Standard`                                  | Toyota Supra MKIV - Standard                                    | 10.1  |
 | `Volkswagen_Golf_8_GTI`                                       | Volkswagen Golf 8 GTI - Clubsport                               | 10.8  |
+| `Volkswagen_Golf_8_R`                                         | Volkswagen Golf 8 R - Standard                                  | 10.0  |
 | `Volkswagen_Golf_GTI_Mk1`                                     | Volkswagen Golf GTI Mk1 - Standard                              | 7.4   |
 
 ## Tracks
@@ -313,6 +319,7 @@ Use these underscore tokens for the environment variable `EVENT_TRACK`.
 | `Fuji_Speedway_GP`                            | Fuji Speedway                 | GP               | 34                   | 34                       |
 | `Fuji_Speedway_GP_Short`                      | Fuji Speedway                 | GP Short         | 34                   | 34                       |
 | `Imola_GP`                                    | Imola                         | GP               | 29                   | 29                       |
+| `Kyalami_GP`                                  | Kyalami                       | GP               | 20                   | 20                       |
 | `Laguna_Seca_GP`                              | Laguna Seca                   | GP               | 24                   | 24                       |
 | `Monza_GP`                                    | Monza                         | GP               | 30                   | 30                       |
 | `Mount_Panorama_GP`                           | Mount Panorama                | GP               | 35                   | 35                       |

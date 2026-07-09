@@ -71,6 +71,13 @@
       "max_pit_slot": 29
     },
     {
+      "track": "Kyalami",
+      "layout": "GP",
+      "event_name": "GP Time Attack",
+      "track_length": 4522,
+      "max_pit_slot": 20
+    },
+    {
       "track": "Laguna Seca",
       "layout": "GP",
       "event_name": "GP Time Attack",

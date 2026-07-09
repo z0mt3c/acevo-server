@@ -145,6 +145,7 @@ def _defaults(cfg: dict) -> dict:
             "driver_password": "",
             "spectator_password": "",
             "admin_password": "",
+            "entry_list_url": "",
             "results_post_url": "",
             "entry_list_path": "",
             "results_path": "",

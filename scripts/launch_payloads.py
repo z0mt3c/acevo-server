@@ -61,7 +61,10 @@ ENV_BASE_KEYS = (
     "SERVER_DRIVER_PASSWORD",
     "SERVER_SPECTATOR_PASSWORD",
     "SERVER_ADMIN_PASSWORD",
+    "SERVER_ENTRY_LIST_URL",
     "SERVER_RESULTS_POST_URL",
+    "SERVER_ENTRY_LIST_PATH",
+    "SERVER_RESULTS_PATH",
     "EVENT_TYPE",
     "EVENT_INITIAL_GRIP",
     "EVENT_WEATHER_BEHAVIOUR",
@@ -307,6 +310,8 @@ def warn_unsupported_launcher_fields(launcher: LauncherImport, document: dict) -
             "SelectedTrackValue",
             "Cars",
             "ShowOnlySelected",
+            "ShowOnlyOfficial",
+            "SelectOnlyOfficialCarsCommand",
         }
         ignored.extend(f"Event.{key}" for key in event if key not in supported)
 

@@ -384,6 +384,22 @@
     "property_3": 0
   },
   {
+    "display_name": "KTM X-Bow GT2 - GT2",
+    "internal_name": "preset_xbgt2_mech_1",
+    "performance_indicator": 19.3,
+    "property_1": 1,
+    "property_2": 0,
+    "property_3": 0
+  },
+  {
+    "display_name": "KTM X-Bow GT4 - GT4",
+    "internal_name": "preset_xbgt4_mech_1",
+    "performance_indicator": 19,
+    "property_1": 1,
+    "property_2": 0,
+    "property_3": 0
+  },
+  {
     "display_name": "Lamborghini Countach LP5000 QV - LP5000 QV",
     "internal_name": "preset_cntqv_mech_1",
     "performance_indicator": 9.5,
@@ -739,6 +755,14 @@
     "display_name": "Volkswagen Golf 8 GTI - Clubsport",
     "internal_name": "preset_mk8gti_mech_1",
     "performance_indicator": 10.8,
+    "property_1": 0,
+    "property_2": 0,
+    "property_3": 0
+  },
+  {
+    "display_name": "Volkswagen Golf 8 R - Standard",
+    "internal_name": "preset_mk8r_mech_1",
+    "performance_indicator": 10,
     "property_1": 0,
     "property_2": 0,
     "property_3": 0
