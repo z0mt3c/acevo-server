@@ -255,9 +255,9 @@ print_crash_hint() {
   fi
 }
 
-if [[ "${AUTO_UPDATE,,}" == "true" ]]; then
-  /opt/acevo/scripts/update.sh
-fi
+# No auto-update here: this script runs on EVERY server start, including track
+# and settings changes made from the dashboard. Updating is tied to container
+# start (start.sh) and to the dashboard's update endpoint instead.
 
 configure_proton_runtime
 log_fingerprint
