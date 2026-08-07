@@ -861,7 +861,7 @@ async function refreshStatus() {
     const s = await api.get("/api/server/status");
     const chip = byId("status-chip");
     chip.className = "status-chip " + (s.state || "unknown");
-    byId("status-text").textContent = statusLabel(s);
+    byId("status-text").textContent = s.update && s.update.running ? "Updating…" : statusLabel(s);
   } catch {
     byId("status-text").textContent = "Unknown";
   }
@@ -885,6 +885,15 @@ async function doRestart() {
   if (!(await confirmDialog("Restart to apply the config? Players will briefly disconnect.", "Restart server"))) return;
   const r = await api.post("/api/server/restart");
   toast(r.ok ? "Restarting…" : "Restart failed: " + (r.error || r.stderr || ""));
+  refreshStatus();
+  refreshLogsSoon();
+}
+
+async function doUpdate() {
+  const msg = "Update the dedicated server via SteamCMD? The server stops during the update and restarts afterwards.";
+  if (!(await confirmDialog(msg, "Update server"))) return;
+  const r = await api.post("/api/server/update");
+  toast(r.ok ? "Update started — watch the log." : "Update failed: " + (r.error || ""));
   refreshStatus();
   refreshLogsSoon();
 }
@@ -1044,6 +1053,7 @@ function wireControls() {
   byId("btn-start").addEventListener("click", doStart);
   byId("btn-stop").addEventListener("click", doStop);
   byId("btn-restart").addEventListener("click", doRestart);
+  byId("btn-update").addEventListener("click", doUpdate);
   byId("btn-save").addEventListener("click", doSave);
   byId("btn-save-apply").addEventListener("click", doSaveApply);
   byId("btn-profile-save").addEventListener("click", saveProfile);

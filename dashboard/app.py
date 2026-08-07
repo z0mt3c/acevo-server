@@ -189,6 +189,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return self._send_json(server_control.stop())
             if route == "/api/server/restart":
                 return self._send_json(server_control.restart())
+            if route == "/api/server/update":
+                return self._send_json(server_control.update())
         except Exception as exc:  # noqa: BLE001
             return self._send_json({"error": str(exc)}, 500)
         return self._send_json({"error": "not found"}, 404)

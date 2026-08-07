@@ -19,6 +19,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUN_SERVER_SCRIPT = Path(os.environ.get("ACEVO_RUN_SERVER", str(REPO_ROOT / "scripts" / "run_server.sh")))
+UPDATE_SCRIPT = Path(os.environ.get("ACEVO_UPDATE_SCRIPT", str(REPO_ROOT / "scripts" / "update.sh")))
 LOG_FILE = Path(os.environ.get("ACEVO_SERVER_LOG", "/data/logs/server.log"))
 _TERM_TIMEOUT = 15.0
 _MAX_LOG_READ = 256 * 1024
@@ -27,6 +28,10 @@ _lock = threading.Lock()
 _proc: subprocess.Popen | None = None
 _last_exit: int | None = None
 _log_thread: threading.Thread | None = None
+
+_IDLE_UPDATE_STATE = {"running": False, "ok": None, "exit_code": None, "message": ""}
+_update_lock = threading.Lock()
+_update_state = dict(_IDLE_UPDATE_STATE)
 
 
 def _write_stdout(data: bytes) -> None:
@@ -143,7 +148,51 @@ def restart() -> dict:
     return start()
 
 
+def _run_update(restart_afterwards: bool) -> None:
+    """Worker thread: SteamCMD would overwrite files under a live server, so stop first."""
+    global _update_state
+    stop()
+    exit_code = 1
+    try:
+        LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_FILE, "ab", buffering=0) as log_fh:
+            log_fh.write(b"\n--- running scripts/update.sh ---\n")
+            completed = subprocess.run(  # noqa: S603 - fixed script path, no shell
+                ["/usr/bin/env", "bash", str(UPDATE_SCRIPT)],
+                stdout=log_fh,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+                cwd=str(REPO_ROOT),
+            )
+        exit_code = completed.returncode
+        message = "update finished" if exit_code == 0 else f"update failed with exit code {exit_code}"
+    except OSError as exc:
+        message = f"update could not run: {exc}"
+    finally:
+        ok = exit_code == 0
+        with _update_lock:
+            _update_state = {"running": False, "ok": ok, "exit_code": exit_code, "message": message}
+    if ok and restart_afterwards:
+        start()
+
+
+def update() -> dict:
+    """Force a SteamCMD update (no staleness check) and restart the server if it was up."""
+    global _update_state
+    if not UPDATE_SCRIPT.exists():
+        return {"ok": False, "error": f"update script not found: {UPDATE_SCRIPT}"}
+    with _update_lock:
+        if _update_state["running"]:
+            return {"ok": False, "error": "an update is already running"}
+        _update_state = {"running": True, "ok": None, "exit_code": None, "message": "update running"}
+    was_running = status()["running"]
+    threading.Thread(target=_run_update, args=(was_running,), daemon=True).start()
+    return {"ok": True, "started": True, "restart_afterwards": was_running}
+
+
 def status() -> dict:
+    with _update_lock:
+        update_state = dict(_update_state)
     with _lock:
         running = _running_locked()
         return {
@@ -151,6 +200,7 @@ def status() -> dict:
             "state": "running" if running else "stopped",
             "pid": _proc.pid if running and _proc is not None else None,
             "last_exit_code": _last_exit,
+            "update": update_state,
         }
 
 

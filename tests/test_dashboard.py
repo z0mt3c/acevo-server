@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -477,6 +478,96 @@ class FrontendStaticTests(unittest.TestCase):
         self.assertIn("All visible cars", source)
         self.assertIn("cars-list-header", source)
         self.assertNotIn("Select none", source)
+
+    def test_update_button_is_wired(self):
+        static = Path(__file__).parents[1] / "dashboard" / "static"
+        self.assertIn('id="btn-update"', (static / "index.html").read_text(encoding="utf-8"))
+        source = (static / "app.js").read_text(encoding="utf-8")
+        self.assertIn('byId("btn-update").addEventListener("click", doUpdate)', source)
+        self.assertIn("/api/server/update", source)
+
+
+class ServerUpdateTests(unittest.TestCase):
+    """The update button runs SteamCMD, which must never happen under a live server."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        for name, value in (("LOG_FILE", self.tmp / "logs" / "server.log"),):
+            patcher = patch.object(server_control, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        server_control._proc = None
+        server_control._update_state = dict(server_control._IDLE_UPDATE_STATE)
+        self.addCleanup(setattr, server_control, "_proc", None)
+
+    def script(self, body: str) -> Path:
+        path = self.tmp / "update.sh"
+        path.write_text(f"#!/usr/bin/env bash\n{body}\n", encoding="utf-8")
+        path.chmod(0o755)
+        return path
+
+    def run_update(self, body: str, running: bool):
+        if running:
+            server_control._proc = FakeProc(poll_result=None)
+        with (
+            patch.object(server_control, "UPDATE_SCRIPT", self.script(body)),
+            patch.object(server_control, "stop") as stop,
+            patch.object(server_control, "start") as start,
+        ):
+            result = server_control.update()
+            self.assertTrue(result["ok"], result)
+            deadline = time.monotonic() + 20
+            while server_control.status()["update"]["running"] and time.monotonic() < deadline:
+                time.sleep(0.05)
+        return stop, start, server_control.status()["update"]
+
+    def test_stops_server_updates_and_restarts(self):
+        stop, start, state = self.run_update("echo updated", running=True)
+        stop.assert_called_once()
+        start.assert_called_once()
+        self.assertTrue(state["ok"])
+        self.assertEqual(state["exit_code"], 0)
+
+    def test_does_not_restart_after_a_failed_update(self):
+        stop, start, state = self.run_update("echo boom >&2; exit 7", running=True)
+        stop.assert_called_once()
+        start.assert_not_called()
+        self.assertFalse(state["ok"])
+        self.assertEqual(state["exit_code"], 7)
+
+    def test_leaves_a_stopped_server_stopped(self):
+        _stop, start, state = self.run_update("echo updated", running=False)
+        start.assert_not_called()
+        self.assertTrue(state["ok"])
+
+    def test_output_goes_into_the_server_log(self):
+        self.run_update("echo hello-from-update", running=False)
+        self.assertIn("hello-from-update", server_control.logs()["lines"])
+
+    def test_second_update_is_rejected_while_one_runs(self):
+        with (
+            patch.object(server_control, "UPDATE_SCRIPT", self.script("sleep 2")),
+            patch.object(server_control, "stop"),
+            patch.object(server_control, "start"),
+        ):
+            first = server_control.update()
+            second = server_control.update()
+            self.assertTrue(first["ok"])
+            self.assertFalse(second["ok"])
+            deadline = time.monotonic() + 20
+            while server_control.status()["update"]["running"] and time.monotonic() < deadline:
+                time.sleep(0.05)
+
+    def test_missing_script_reports_an_error(self):
+        with patch.object(server_control, "UPDATE_SCRIPT", self.tmp / "nope.sh"):
+            result = server_control.update()
+        self.assertFalse(result["ok"])
+
+    def test_status_exposes_idle_update_state(self):
+        state = server_control.status()["update"]
+        self.assertFalse(state["running"])
+        self.assertIsNone(state["ok"])
 
 
 class HttpIntegrationTests(unittest.TestCase):
