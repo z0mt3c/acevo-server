@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from . import config_io, live, metadata, results, server_control
+from . import config_io, live, mcp_api, metadata, results, server_control
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -198,6 +198,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if not self._authorized():
             return self._send_401()
         route = urlsplit(self.path).path
+
+        # MCP speaks JSON-RPC, including notifications that must be answered with
+        # 202 and no body — so it cannot go through the JSON-result path below.
+        if route == "/mcp":
+            request = self._read_json_body()
+            if request is None:
+                return self._send_json({"jsonrpc": "2.0", "error": {"code": -32700, "message": "parse error"}}, 400)
+            batch = request if isinstance(request, list) else [request]
+            responses = [answer for answer in (mcp_api.handle(item) for item in batch) if answer is not None]
+            if not responses:
+                return self._send_bytes(b"", 202, "application/json")
+            payload = responses if isinstance(request, list) else responses[0]
+            return self._send_json(payload)
 
         # Before the JSON parser: the game server's payload shape is unknown, and
         # a body we cannot parse must still be captured rather than rejected.
