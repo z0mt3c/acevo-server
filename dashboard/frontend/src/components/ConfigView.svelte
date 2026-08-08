@@ -20,9 +20,6 @@
       <Field label="Server name" wide>
         <input class="field" bind:value={server.server_name} />
       </Field>
-      <Field label="TCP port"><input class="field num" type="number" bind:value={server.tcp_port} /></Field>
-      <Field label="UDP port"><input class="field num" type="number" bind:value={server.udp_port} /></Field>
-      <Field label="HTTP port"><input class="field num" type="number" bind:value={server.http_port} /></Field>
       <Field label="Max players" hint={`Track limit: ${dash.pitLimit} pit slots`}>
         <input
           class="field num"
@@ -155,8 +152,20 @@
     <CarPicker />
   </div>
 
-  <Section title="Advanced" subtitle="Entry list, results, webhooks" open={false}>
+  <Section title="Advanced" subtitle="Ports, entry list, results" open={false}>
     <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-xl bg-raised/40 p-3 sm:col-span-2">
+        <p class="mb-2 text-[11px] text-muted">
+          Ports are pinned by the container environment so they match the published Docker ports — changing them here
+          has no effect until the stack changes too.
+        </p>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <Field label="TCP port"><input class="field num" type="number" bind:value={server.tcp_port} /></Field>
+          <Field label="UDP port"><input class="field num" type="number" bind:value={server.udp_port} /></Field>
+          <Field label="HTTP port"><input class="field num" type="number" bind:value={server.http_port} /></Field>
+        </div>
+      </div>
+
       <Field label="Entry list URL" wide hint="Server pulls the allowed SteamIDs from here">
         <input class="field" bind:value={server.entry_list_url} />
       </Field>
