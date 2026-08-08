@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from . import config_io, metadata, server_control
+from . import config_io, live, metadata, server_control
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -158,6 +158,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return self._send_json({"name": name, "form": form})
             if route == "/api/server/status":
                 return self._send_json(server_control.status())
+            if route == "/api/server/live":
+                return self._send_json(live.snapshot())
             if route == "/api/server/logs":
                 tail = int((parse_qs(parts.query).get("tail") or ["200"])[0] or 200)
                 return self._send_json(server_control.logs(tail=tail))
