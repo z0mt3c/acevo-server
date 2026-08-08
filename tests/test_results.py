@@ -55,6 +55,13 @@ class RecordTest(unittest.TestCase):
         self.assertIn("results webhook", written[0])
         self.assertIn('{"x": 1}', written[0])
 
+    def test_headers_are_logged_for_diagnosis(self) -> None:
+        """An empty JSON body is ambiguous — the headers say whether it arrived
+        chunked or was genuinely empty."""
+        written = []
+        results.record(b"", "application/json", log_writer=written.append, headers={"Transfer-Encoding": "chunked"})
+        self.assertIn("Transfer-Encoding: chunked", written[0])
+
     def test_empty_body_is_still_recorded(self) -> None:
         outcome = results.record(b"", "")
         self.assertTrue(outcome["ok"])

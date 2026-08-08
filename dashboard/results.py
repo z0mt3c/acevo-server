@@ -29,8 +29,12 @@ def _summarise(raw: bytes) -> str:
     return f"JSON {type(parsed).__name__}"
 
 
-def record(raw: bytes, content_type: str = "", log_writer=None) -> dict:
-    """Persist one delivery and return what was stored."""
+def record(raw: bytes, content_type: str = "", log_writer=None, headers: dict | None = None) -> dict:
+    """Persist one delivery and return what was stored.
+
+    Headers are logged too: an empty body with a JSON content type is ambiguous —
+    it can mean "nothing to report" or "sent chunked and we failed to read it".
+    """
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
     suffix = "json" if "json" in (content_type or "").lower() else "txt"
@@ -45,9 +49,10 @@ def record(raw: bytes, content_type: str = "", log_writer=None) -> dict:
 
     summary = _summarise(raw)
     if log_writer is not None:
+        header_lines = "".join(f"    {key}: {value}\n" for key, value in sorted((headers or {}).items()))
         log_writer(
             f"\n--- results webhook: {len(raw)} bytes, content-type={content_type or 'unset'} ---\n"
-            f"{summary}\n{raw[:_MAX_ECHO].decode('utf-8', errors='replace')}\n"
+            f"{header_lines}{summary}\n{raw[:_MAX_ECHO].decode('utf-8', errors='replace')}\n"
         )
     return {"ok": True, "stored": str(target), "bytes": len(raw), "summary": summary}
 

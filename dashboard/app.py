@@ -170,6 +170,24 @@ class DashboardHandler(BaseHTTPRequestHandler):
         return self._send_json({"error": "not found"}, 404)
 
     def _read_raw_body(self) -> bytes:
+        """Content-Length is not guaranteed: a chunked request carries none, and
+        reading zero bytes there looks exactly like an empty payload."""
+        if "chunked" in (self.headers.get("Transfer-Encoding") or "").lower():
+            chunks = []
+            while True:
+                line = self.rfile.readline().strip()
+                if not line:
+                    break
+                try:
+                    size = int(line.split(b";")[0], 16)
+                except ValueError:
+                    break
+                if size == 0:
+                    self.rfile.readline()  # trailing CRLF
+                    break
+                chunks.append(self.rfile.read(size))
+                self.rfile.readline()
+            return b"".join(chunks)
         try:
             length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
@@ -189,6 +207,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 raw,
                 self.headers.get("Content-Type", ""),
                 log_writer=lambda text: server_control.append_log(text),
+                headers=dict(self.headers.items()),
             )
             return self._send_json(outcome)
 
