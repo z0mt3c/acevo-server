@@ -89,6 +89,42 @@
   }
 
   const selectAll = (value) => dash.form.cars.forEach((car) => (car.is_selected = value));
+
+  // --- balance of performance ----------------------------------------------
+  // Ballast and the restrictor can only take performance away, so the slowest
+  // selected car sets the target and everyone else is weighed down towards it.
+  // How much ballast one PI point is worth is not documented anywhere — hence
+  // the adjustable factor instead of a hardcoded constant.
+  let bopFactor = $state(Number(localStorage.getItem("acevo.bopFactor")) || 10);
+
+  const selectedMeta = $derived(
+    dash.form.cars.filter((car) => car.is_selected).map((car) => byName.get(car.name)).filter(Boolean),
+  );
+  const piSpread = $derived.by(() => {
+    if (selectedMeta.length < 2) return null;
+    const values = selectedMeta.map((car) => car.pi);
+    return { min: Math.min(...values), max: Math.max(...values) };
+  });
+
+  function balanceByPi() {
+    if (!piSpread) return;
+    localStorage.setItem("acevo.bopFactor", String(bopFactor));
+    for (const car of dash.form.cars) {
+      if (!car.is_selected) continue;
+      const meta = byName.get(car.name);
+      if (!meta) continue;
+      car.ballast = Math.round((meta.pi - piSpread.min) * bopFactor);
+    }
+    dash.toast(`Ballast set from the PI gap (${piSpread.min} – ${piSpread.max}). Verify it on track.`);
+  }
+
+  function resetBop() {
+    for (const car of dash.form.cars) {
+      car.ballast = 0;
+      car.restrictor = 0;
+    }
+    dash.toast("Ballast and restrictor cleared.");
+  }
 </script>
 
 <Section title="Cars" subtitle={`${selectedCount} of ${dash.meta.cars.length} selected`} open={false}>
@@ -143,6 +179,29 @@
       <input type="checkbox" class="size-3.5 accent-[var(--color-accent)]" bind:checked={onlySelected} />
       only selected
     </label>
+  </div>
+
+  <div class="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-raised/40 p-2.5 text-xs">
+    <span class="font-medium">Balance of performance</span>
+    {#if piSpread}
+      <span class="num text-muted">PI {piSpread.min} – {piSpread.max}</span>
+      <button
+        class="rounded-lg bg-accent px-2.5 py-1.5 font-medium text-white"
+        title="Ballast every selected car in proportion to how far its PI is above the slowest one"
+        onclick={balanceByPi}
+      >
+        Balance by PI
+      </button>
+      <label class="flex items-center gap-1.5 text-muted">
+        <input class="field num w-16 px-2 py-1 text-xs" type="number" min="0" step="1" bind:value={bopFactor} />
+        per PI point
+      </label>
+    {:else}
+      <span class="text-muted">Select at least two cars.</span>
+    {/if}
+    <button class="ml-auto rounded-lg bg-raised px-2.5 py-1.5 text-muted hover:text-ink" onclick={resetBop}>
+      Reset
+    </button>
   </div>
 
   <div class="mb-2 flex items-center justify-between border-t border-line pt-2 text-xs text-muted">

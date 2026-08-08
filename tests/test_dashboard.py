@@ -516,6 +516,13 @@ class FrontendStaticTests(unittest.TestCase):
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
+    def test_ballast_can_be_derived_from_pi(self):
+        """Ballast only removes performance, so the slowest selected car has to
+        be the target — weighing everyone down towards it."""
+        picker = self.source("components", "CarPicker.svelte")
+        self.assertIn("balanceByPi", picker)
+        self.assertIn("piSpread.min", picker)
+
     def test_each_mode_remembers_its_track(self):
         """Nürburgring Touristenfahrten only exists as a practice event, so a
         Practice → Race → Practice round trip used to lose it for good."""
