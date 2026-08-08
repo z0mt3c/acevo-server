@@ -88,7 +88,7 @@
   }
 </script>
 
-<Section title="Cars" subtitle={`${selectedCount} of ${dash.meta.cars.length} selected`}>
+<Section title="Cars" subtitle={`${selectedCount} of ${dash.meta.cars.length} selected`} open={false}>
   <div class="mb-3 flex flex-wrap gap-1.5">
     {#each [["all", "All"], ["none", "None"], ["race", "Race only"], ["road", "Road only"], ["vintage", "Vintage"], ["electric", "Electric"]] as [key, label] (key)}
       <button
@@ -103,27 +103,21 @@
   <input class="field mb-2" placeholder="Filter by name…" bind:value={text} />
 
   <div class="mb-2 flex flex-wrap gap-1">
-    {#each dash.meta.categories.type as value (value)}
-      <button
-        class="rounded-full px-2.5 py-1 text-[11px] {types.has(value)
-          ? 'bg-accent text-white'
-          : 'bg-raised text-muted'}"
-        onclick={() => (types = toggleFacet(types, value))}>{value}</button
-      >
-    {/each}
-    {#each dash.meta.categories.era as value (value)}
-      <button
-        class="rounded-full px-2.5 py-1 text-[11px] {eras.has(value) ? 'bg-accent text-white' : 'bg-raised text-muted'}"
-        onclick={() => (eras = toggleFacet(eras, value))}>{value}</button
-      >
-    {/each}
-    {#each dash.meta.categories.engine as value (value)}
-      <button
-        class="rounded-full px-2.5 py-1 text-[11px] {engines.has(value)
-          ? 'bg-accent text-white'
-          : 'bg-raised text-muted'}"
-        onclick={() => (engines = toggleFacet(engines, value))}>{value}</button
-      >
+    {#each [["type", dash.meta.categories.type], ["era", dash.meta.categories.era], ["engine", dash.meta.categories.engine]] as [facet, options] (facet)}
+      {#each options as option (option.value)}
+        {@const active =
+          facet === "type" ? types.has(option.value) : facet === "era" ? eras.has(option.value) : engines.has(option.value)}
+        <button
+          class="rounded-full px-2.5 py-1 text-[11px] {active ? 'bg-accent text-white' : 'bg-raised text-muted'}"
+          onclick={() => {
+            if (facet === "type") types = toggleFacet(types, option.value);
+            else if (facet === "era") eras = toggleFacet(eras, option.value);
+            else engines = toggleFacet(engines, option.value);
+          }}
+        >
+          {option.label}
+        </button>
+      {/each}
     {/each}
   </div>
 

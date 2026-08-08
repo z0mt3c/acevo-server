@@ -74,7 +74,7 @@
     </div>
   </Section>
 
-  <Section title="Event" subtitle={dash.track ? dash.track.display : ""}>
+  <Section title="Event" subtitle={dash.track ? dash.track.display : ""} open={false}>
     <div class="grid gap-3 sm:grid-cols-2">
       <Field label="Mode" wide>
         <div class="grid grid-cols-2 gap-1 rounded-xl bg-raised p-1">
@@ -123,7 +123,11 @@
     </div>
   </Section>
 
-  <Section title="Sessions" subtitle={sessionKeys.map((key) => duration(dash.form.sessions[key].length_sec)).join(" · ")}>
+  <Section
+    title="Sessions"
+    subtitle={sessionKeys.map((key) => duration(dash.form.sessions[key].length_sec)).join(" · ")}
+    open={false}
+  >
     <div class="grid gap-4">
       {#each sessionKeys as key (key)}
         {@const session = dash.form.sessions[key]}
@@ -133,9 +137,9 @@
             <DurationField label="Length" bind:seconds={session.length_sec} />
             <Field label="Start time">
               <div class="flex items-center gap-2">
-                <input class="field num" type="number" min="0" max="23" bind:value={session.hour} />
+                <input class="field num min-w-0" type="number" min="0" max="23" bind:value={session.hour} />
                 <span class="text-muted">:</span>
-                <input class="field num" type="number" min="0" max="59" bind:value={session.minute} />
+                <input class="field num min-w-0" type="number" min="0" max="59" bind:value={session.minute} />
               </div>
             </Field>
             <Field label="Time multiplier">
@@ -168,7 +172,11 @@
     </div>
   </Section>
 
-  <Section title="Validation" subtitle={dash.report?.warnings?.length ? `${dash.report.warnings.length} warnings` : "ok"}>
+  <Section
+    title="Validation"
+    subtitle={dash.report?.warnings?.length ? `${dash.report.warnings.length} warnings` : "ok"}
+    open={false}
+  >
     {#if dash.report?.warnings?.length}
       <ul class="space-y-1.5 text-xs">
         {#each dash.report.warnings as warning}

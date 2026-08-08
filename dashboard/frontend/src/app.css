@@ -34,6 +34,8 @@ body {
   /* Notch and home indicator on phones. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
   overscroll-behavior-y: none;
+  /* A phone must never scroll sideways; wide content scrolls inside its own box. */
+  overflow-x: hidden;
 }
 
 /* Tabular numerals everywhere numbers are compared vertically. */

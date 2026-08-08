@@ -17,7 +17,7 @@
     <span class="num text-[11px] text-muted/70">{duration(seconds)}</span>
   </span>
   <div class="flex items-center gap-2">
-    <div class="relative flex-1">
+    <div class="relative min-w-0 flex-1">
       <input
         class="field num pr-8"
         type="number"
