@@ -508,6 +508,11 @@ class FrontendStaticTests(unittest.TestCase):
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
+    def test_log_lines_are_keyed_by_index(self):
+        """Keying log lines by their text throws on the first repeated line and
+        the whole list stops rendering."""
+        self.assertIn("as line, index (index)", self.source("components", "LogsView.svelte"))
+
 
 class ServerUpdateTests(unittest.TestCase):
     """The update button runs SteamCMD, which must never happen under a live server."""

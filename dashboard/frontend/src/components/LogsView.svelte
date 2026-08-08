@@ -77,7 +77,9 @@
   </div>
 
   <div bind:this={container} onscroll={onScroll} class="flex-1 overflow-auto px-3 py-2">
-    <pre class="num text-[11.5px] leading-[1.5]">{#each shown as line (line)}<span
+    <!-- Keyed by index, not by content: a log repeats identical lines all the
+         time, and duplicate keys make Svelte throw instead of render. -->
+    <pre class="num text-[11.5px] leading-[1.5]">{#each shown as line, index (index)}<span
           class="block whitespace-pre-wrap {LEVELS[classify(line)]}">{line}</span
         >{/each}</pre>
     {#if shown.length === 0}
