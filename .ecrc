@@ -1,3 +1,9 @@
 {
-  "Exclude": ["dashboard/static/vendor/", "node_modules/", "volumes/", "\\.git/"]
+  "Exclude": [
+    "dashboard/static/",
+    "node_modules/",
+    "volumes/",
+    "\\.git/",
+    "dashboard/frontend/src/.*\\.(svelte|css)$"
+  ]
 }
