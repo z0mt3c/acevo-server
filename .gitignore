@@ -11,3 +11,8 @@ volumes/config/
 
 # Vite build output (dashboard/frontend is the source)
 dashboard/static/
+
+# uv artefacts of the MCP server
+mcp-server/.venv/
+mcp-server/uv.lock
+mcp-server/__pycache__/
