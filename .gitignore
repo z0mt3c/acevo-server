@@ -8,3 +8,6 @@ __pycache__/
 volumes/data/
 volumes/steam/
 volumes/config/
+
+# Vite build output (dashboard/frontend is the source)
+dashboard/static/

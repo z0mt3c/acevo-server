@@ -473,18 +473,40 @@ class BasicAuthTests(unittest.TestCase):
 
 
 class FrontendStaticTests(unittest.TestCase):
-    def test_cars_bulk_selection_uses_master_checkbox_only(self):
-        source = (Path(__file__).parents[1] / "dashboard" / "static" / "app.js").read_text(encoding="utf-8")
-        self.assertIn("All visible cars", source)
-        self.assertIn("cars-list-header", source)
-        self.assertNotIn("Select none", source)
+    """The SPA lives in dashboard/frontend and is compiled into dashboard/static
+    at image build time, so these assert against the source, not the bundle."""
 
-    def test_update_button_is_wired(self):
-        static = Path(__file__).parents[1] / "dashboard" / "static"
-        self.assertIn('id="btn-update"', (static / "index.html").read_text(encoding="utf-8"))
-        source = (static / "app.js").read_text(encoding="utf-8")
-        self.assertIn('byId("btn-update").addEventListener("click", doUpdate)', source)
-        self.assertIn("/api/server/update", source)
+    FRONTEND = Path(__file__).parents[1] / "dashboard" / "frontend" / "src"
+
+    def source(self, *parts):
+        return (self.FRONTEND.joinpath(*parts)).read_text(encoding="utf-8")
+
+    def test_every_server_action_is_reachable(self):
+        api = self.source("lib", "api.js")
+        for route in ("start", "stop", "restart", "update", "live"):
+            self.assertIn(f"/api/server/{route}", api)
+
+    def test_mode_switch_keeps_the_track(self):
+        """Same circuit, different token per mode — matching on the token alone
+        is what used to reset the track to the first entry in the list."""
+        state = self.source("lib", "state.svelte.js")
+        self.assertIn("trackIdentity", state)
+        self.assertIn("setEventType", state)
+
+    def test_track_identity_ignores_the_event_name(self):
+        fmt = self.source("lib", "format.js")
+        self.assertIn('split("|").slice(0, 2)', fmt)
+
+    def test_max_players_is_clamped_to_the_pit_limit(self):
+        self.assertIn("clampPlayers", self.source("lib", "state.svelte.js"))
+
+    def test_car_presets_exist(self):
+        picker = self.source("components", "CarPicker.svelte")
+        for preset in ("all", "none", "race", "road", "vintage", "electric"):
+            self.assertIn(f"{preset}:", picker)
+
+    def test_durations_are_entered_in_hours_and_minutes(self):
+        self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
 
 class ServerUpdateTests(unittest.TestCase):

@@ -1,3 +1,12 @@
+# The dashboard SPA is built here and copied in as static files; no Node ends up
+# in the runtime image.
+FROM node:22-alpine AS frontend
+WORKDIR /build/dashboard/frontend
+COPY dashboard/frontend/package.json dashboard/frontend/package-lock.json ./
+RUN npm ci
+COPY dashboard/frontend/ ./
+RUN npm run build
+
 FROM steamcmd/steamcmd:ubuntu-24
 
 RUN dpkg --add-architecture i386 \
@@ -49,7 +58,8 @@ ENV PYTHONPATH=/opt/acevo
 EXPOSE 8090
 
 COPY config/ /opt/acevo/config/
-COPY dashboard/ /opt/acevo/dashboard/
+COPY dashboard/*.py /opt/acevo/dashboard/
+COPY --from=frontend /build/dashboard/static /opt/acevo/dashboard/static
 COPY --chmod=755 scripts/ /opt/acevo/scripts/
 
 ENTRYPOINT ["/opt/acevo/scripts/start.sh"]
