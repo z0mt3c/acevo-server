@@ -516,6 +516,11 @@ class FrontendStaticTests(unittest.TestCase):
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
+    def test_each_mode_remembers_its_track(self):
+        """Nürburgring Touristenfahrten only exists as a practice event, so a
+        Practice → Race → Practice round trip used to lose it for good."""
+        self.assertIn("#lastTrackPerMode", self.source("lib", "state.svelte.js"))
+
     def test_race_weekend_gets_session_lengths(self):
         """Switching to Race Weekend left qualify and race at zero — a weekend
         without a race."""

@@ -92,8 +92,13 @@ class Dashboard {
     this.toast(`Sessions set to "${preset.label}".`);
   }
 
+  /** Last track per mode, so a Practice → Race → Practice round trip does not
+   *  quietly cost you a practice-only track like Nürburgring Touristenfahrten. */
+  #lastTrackPerMode = {};
+
   setEventType(type) {
     const previous = this.form.event.track;
+    this.#lastTrackPerMode[this.form.event.type] = previous;
     this.form.event.type = type;
     const isRace = /RACE_WEEKEND/i.test(type);
 
@@ -104,13 +109,23 @@ class Dashboard {
     }
 
     const list = /RACE_WEEKEND/i.test(type) ? this.meta.tracks.race_weekend : this.meta.tracks.practice;
+
+    // Coming back to a mode restores what was selected there last.
+    const remembered = this.#lastTrackPerMode[type];
+    if (remembered && list.some((t) => t.token === remembered)) {
+      this.form.event.track = remembered;
+      this.clampPlayers();
+      return;
+    }
+
     if (list.some((t) => t.token === previous)) return;
     const sameTrack = list.find((t) => trackIdentity(t.token) === trackIdentity(previous));
     if (sameTrack) {
       this.form.event.track = sameTrack.token;
     } else {
       this.form.event.track = list[0]?.token || "";
-      this.toast("Track is not available in this mode — switched to the first one.");
+      const name = (previous || "").split("|")[0];
+      this.toast(`${name || "That track"} has no ${isRace ? "race" : "practice"} variant — picked the first one.`);
     }
     this.clampPlayers();
   }
