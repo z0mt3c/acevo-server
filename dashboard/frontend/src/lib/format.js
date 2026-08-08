@@ -33,3 +33,40 @@ export function carLabel(internalName, cars) {
 
 /** "Laguna Seca|GP|GP Time Attack|3602" — the event name differs per mode. */
 export const trackIdentity = (token) => (token || "").split("|").slice(0, 2).join("|");
+
+/**
+ * Racing classes. The metadata has no class field — `type` only knows
+ * road/race/track — so the class comes out of the display name. Every rule is
+ * additionally gated on type "race", because road cars carry names like
+ * "718 Cayman GT4 RS" and would otherwise land in the GT4 grid.
+ */
+export const CAR_CLASSES = [
+  {
+    key: "formula",
+    label: "Formula",
+    test: (car) => isRace(car) && /SF-25|F2004|Formula|\bF1\b/.test(car.display_name),
+  },
+  {
+    key: "gt3",
+    label: "GT3",
+    test: (car) => isRace(car) && /\bGT3\b/.test(car.display_name) && !car.display_name.includes("GT3 Cup"),
+  },
+  { key: "gt2", label: "GT2", test: (car) => isRace(car) && /\bGT2\b/.test(car.display_name) },
+  { key: "gt4", label: "GT4", test: (car) => isRace(car) && /\bGT4\b/.test(car.display_name) },
+  {
+    key: "cup",
+    label: "Cup / one-make",
+    test: (car) => isRace(car) && /Cup|Challenge|Trofeo|Academy/.test(car.display_name),
+  },
+  {
+    key: "race",
+    label: "Race (other)",
+    test: (car) => isRace(car) && !CAR_CLASSES.slice(0, 5).some((c) => c.test(car)),
+  },
+  { key: "track", label: "Track toys", test: (car) => car.type === "track" },
+  { key: "road", label: "Road", test: (car) => car.type === "road" },
+  { key: "vintage", label: "Vintage", test: (car) => car.era === "vintage" },
+  { key: "electric", label: "Electric", test: (car) => car.engine === "ev" },
+];
+
+const isRace = (car) => car.type === "race";

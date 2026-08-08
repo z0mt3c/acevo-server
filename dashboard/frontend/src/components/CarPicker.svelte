@@ -1,6 +1,7 @@
 <script>
   import { dash } from "../lib/state.svelte.js";
   import Section from "./Section.svelte";
+  import { CAR_CLASSES } from "../lib/format.js";
 
   // Filters are UI state, not config — remembered locally so a reload does not
   // throw away the view you had set up.
@@ -67,38 +68,51 @@
     }
   }
 
-  /** One click for the combinations you actually race. */
-  function preset(name) {
-    const rules = {
-      all: () => dash.form.cars.forEach((car) => (car.is_selected = true)),
-      none: () => dash.form.cars.forEach((car) => (car.is_selected = false)),
-      race: () => byCategory((car) => car.type === "race"),
-      road: () => byCategory((car) => car.type === "road"),
-      vintage: () => byCategory((car) => car.era === "vintage"),
-      electric: () => byCategory((car) => car.engine === "ev"),
-    };
-    rules[name]?.();
-  }
+  // Only offer classes that actually exist in this build's car list, with their
+  // size — a "GT3" chip that selects nothing is worse than no chip.
+  const classes = $derived(
+    CAR_CLASSES.map((entry) => ({ ...entry, count: dash.meta.cars.filter(entry.test).length })).filter(
+      (entry) => entry.count > 0,
+    ),
+  );
 
-  function byCategory(predicate) {
+  function selectClass(entry, additive) {
     for (const car of dash.form.cars) {
       const meta = byName.get(car.name);
-      car.is_selected = meta ? predicate(meta) : false;
+      const matches = meta ? entry.test(meta) : false;
+      if (additive) {
+        if (matches) car.is_selected = true;
+      } else {
+        car.is_selected = matches;
+      }
     }
   }
+
+  const selectAll = (value) => dash.form.cars.forEach((car) => (car.is_selected = value));
 </script>
 
 <Section title="Cars" subtitle={`${selectedCount} of ${dash.meta.cars.length} selected`} open={false}>
-  <div class="mb-3 flex flex-wrap gap-1.5">
-    {#each [["all", "All"], ["none", "None"], ["race", "Race only"], ["road", "Road only"], ["vintage", "Vintage"], ["electric", "Electric"]] as [key, label] (key)}
+  <div class="mb-1 flex flex-wrap gap-1.5">
+    <button
+      class="rounded-full border border-line bg-raised px-3 py-1.5 text-xs hover:border-accent"
+      onclick={() => selectAll(true)}>All</button
+    >
+    <button
+      class="rounded-full border border-line bg-raised px-3 py-1.5 text-xs hover:border-accent"
+      onclick={() => selectAll(false)}>None</button
+    >
+    {#each classes as entry (entry.key)}
       <button
-        class="rounded-full border border-line bg-raised px-3 py-1.5 text-xs hover:border-accent"
-        onclick={() => preset(key)}
+        class="flex items-center gap-1.5 rounded-full border border-line bg-raised px-3 py-1.5 text-xs hover:border-accent"
+        title={`Click: only ${entry.label} · Shift-click: add to the selection`}
+        onclick={(event) => selectClass(entry, event.shiftKey)}
       >
-        {label}
+        {entry.label}
+        <span class="num text-[10px] text-muted">{entry.count}</span>
       </button>
     {/each}
   </div>
+  <p class="mb-3 text-[11px] text-muted/70">Click a class to race only that one, shift-click to add it.</p>
 
   <input class="field mb-2" placeholder="Filter by name…" bind:value={text} />
 

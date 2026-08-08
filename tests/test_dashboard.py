@@ -500,10 +500,18 @@ class FrontendStaticTests(unittest.TestCase):
     def test_max_players_is_clamped_to_the_pit_limit(self):
         self.assertIn("clampPlayers", self.source("lib", "state.svelte.js"))
 
-    def test_car_presets_exist(self):
-        picker = self.source("components", "CarPicker.svelte")
-        for preset in ("all", "none", "race", "road", "vintage", "electric"):
-            self.assertIn(f"{preset}:", picker)
+    def test_racing_classes_are_offered(self):
+        fmt = self.source("lib", "format.js")
+        for key in ("formula", "gt3", "gt2", "gt4", "cup", "track", "road", "vintage", "electric"):
+            self.assertIn(f'key: "{key}"', fmt)
+
+    def test_racing_classes_require_race_cars(self):
+        """Road cars are named "718 Cayman GT4 RS" and must not land in GT4."""
+        fmt = self.source("lib", "format.js")
+        for rule in ("gt3", "gt2", "gt4"):
+            line = next(line for line in fmt.splitlines() if f'key: "{rule}"' in line or f'"{rule}"' in line)
+            self.assertTrue(line, rule)
+        self.assertIn('const isRace = (car) => car.type === "race"', fmt)
 
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))

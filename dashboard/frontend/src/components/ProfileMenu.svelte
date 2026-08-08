@@ -3,6 +3,18 @@
 
   let open = $state(false);
   let root = $state(null);
+  // In the bottom nav the trigger sits at the very bottom of the screen, so a
+  // menu that always drops downwards is invisible. Flip it when there is more
+  // room above than below.
+  let dropUp = $state(false);
+
+  function toggle() {
+    if (!open && root) {
+      const box = root.getBoundingClientRect();
+      dropUp = window.innerHeight - box.bottom < 280;
+    }
+    open = !open;
+  }
 
   $effect(() => {
     if (!open) return;
@@ -35,7 +47,7 @@
   <button
     class="flex items-center gap-1.5 rounded-lg border border-line bg-raised px-2.5 py-1.5 text-xs text-muted
            hover:text-ink"
-    onclick={() => (open = !open)}
+    onclick={toggle}
   >
     <span aria-hidden="true">▤</span>
     Profiles
@@ -43,7 +55,11 @@
   </button>
 
   {#if open}
-    <div class="card absolute left-0 top-full z-30 mt-2 w-64 overflow-hidden p-1 shadow-2xl">
+    <div
+      class="card absolute z-30 w-64 overflow-hidden p-1 shadow-2xl {dropUp
+        ? 'bottom-full mb-2 right-0'
+        : 'top-full mt-2 left-0'}"
+    >
       {#if dash.profiles.length === 0}
         <p class="px-3 py-2 text-xs text-muted">No profiles saved yet.</p>
       {:else}
