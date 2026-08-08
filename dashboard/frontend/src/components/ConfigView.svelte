@@ -5,6 +5,7 @@
   import DurationField from "./DurationField.svelte";
   import CarPicker from "./CarPicker.svelte";
   import { duration } from "../lib/format.js";
+  import { SESSION_PRESETS } from "../lib/presets.js";
 
   const server = $derived(dash.form.server);
   const event = $derived(dash.form.event);
@@ -125,13 +126,50 @@
     subtitle={sessionKeys.map((key) => duration(dash.form.sessions[key].length_sec)).join(" · ")}
     open={false}
   >
+    {#if isRace}
+      <div class="mb-3 flex flex-wrap gap-1.5">
+        {#each SESSION_PRESETS as preset (preset.key)}
+          <button
+            class="rounded-full border border-line bg-raised px-3 py-1.5 text-xs hover:border-accent"
+            title={preset.hint}
+            onclick={() => dash.applySessionPreset(preset.key)}
+          >
+            {preset.label}
+            <span class="num ml-1 text-[10px] text-muted">{preset.hint}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
+
     <div class="grid gap-4">
       {#each sessionKeys as key (key)}
         {@const session = dash.form.sessions[key]}
         <div class="rounded-xl bg-raised/40 p-3">
           <h3 class="mb-2 text-sm font-semibold capitalize">{key}</h3>
           <div class="grid gap-3 sm:grid-cols-2">
-            <DurationField label="Length" bind:seconds={session.length_sec} />
+            {#if key === "race"}
+              <Field label="Race length">
+                <div class="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-bg/60 p-1">
+                  {#each dash.meta.enums.duration_type as option (option.value)}
+                    <button
+                      class="rounded-lg px-2 py-1.5 text-xs {session.duration_type === option.value
+                        ? 'bg-accent font-semibold text-white'
+                        : 'text-muted hover:text-ink'}"
+                      onclick={() => (session.duration_type = option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  {/each}
+                </div>
+                {#if /LAPS/i.test(session.duration_type || "")}
+                  <input class="field num" type="number" min="1" bind:value={session.laps} />
+                {:else}
+                  <DurationField label="" bind:seconds={session.length_sec} />
+                {/if}
+              </Field>
+            {:else}
+              <DurationField label="Length" bind:seconds={session.length_sec} />
+            {/if}
             <Field label="Start time">
               <div class="flex items-center gap-2">
                 <input class="field num min-w-0" type="number" min="0" max="23" bind:value={session.hour} />

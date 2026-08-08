@@ -516,6 +516,23 @@ class FrontendStaticTests(unittest.TestCase):
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
+    def test_race_weekend_gets_session_lengths(self):
+        """Switching to Race Weekend left qualify and race at zero — a weekend
+        without a race."""
+        state = self.source("lib", "state.svelte.js")
+        self.assertIn("applySessionPreset", state)
+        self.assertIn("DEFAULT_WEEKEND", state)
+        presets = self.source("lib", "presets.js")
+        for key in ("sprint", "standard", "endurance", "practice"):
+            self.assertIn(f'key: "{key}"', presets)
+
+    def test_race_can_be_run_over_laps(self):
+        """The race session carries duration_type and laps; only exposing the
+        timed variant makes lap races unreachable."""
+        config = self.source("components", "ConfigView.svelte")
+        self.assertIn("duration_type", config)
+        self.assertIn("session.laps", config)
+
     def test_profile_list_renders_objects_not_strings(self):
         """/api/configs returns {name, track, mode, modified}, not bare names."""
         menu = self.source("components", "ProfileMenu.svelte")

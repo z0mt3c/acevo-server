@@ -1,5 +1,6 @@
 import { api } from "./api.js";
 import { trackIdentity } from "./format.js";
+import { SESSION_PRESETS, DEFAULT_WEEKEND } from "./presets.js";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -78,9 +79,30 @@ class Dashboard {
    * part of it ("GP Time Attack" vs "GP Race"). Match on track+layout so
    * switching Practice ⇄ Race Weekend keeps the track instead of resetting it.
    */
+  applySessionPreset(key) {
+    const preset = SESSION_PRESETS.find((entry) => entry.key === key);
+    if (!preset) return;
+    for (const [session, length] of Object.entries(preset.sessions)) {
+      this.form.sessions[session].length_sec = length;
+    }
+    // A timed race is the sane default; laps stay available in the race panel.
+    if (preset.sessions.race > 0) {
+      this.form.sessions.race.duration_type = "GameModeSelectionDuration_TIME";
+    }
+    this.toast(`Sessions set to "${preset.label}".`);
+  }
+
   setEventType(type) {
     const previous = this.form.event.track;
     this.form.event.type = type;
+    const isRace = /RACE_WEEKEND/i.test(type);
+
+    // A race weekend with a zero-length race is not a weekend. Only fill in when
+    // the user has nothing set, so an existing schedule is never overwritten.
+    if (isRace && !this.form.sessions.race.length_sec && !this.form.sessions.qualify.length_sec) {
+      this.applySessionPreset(DEFAULT_WEEKEND);
+    }
+
     const list = /RACE_WEEKEND/i.test(type) ? this.meta.tracks.race_weekend : this.meta.tracks.practice;
     if (list.some((t) => t.token === previous)) return;
     const sameTrack = list.find((t) => trackIdentity(t.token) === trackIdentity(previous));
