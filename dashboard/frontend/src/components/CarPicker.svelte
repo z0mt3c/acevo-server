@@ -155,6 +155,18 @@
   </div>
 
   <div class="max-h-[26rem] overflow-y-auto rounded-xl border border-line">
+    <!-- Balance of performance: ballast is whole units of added weight, the
+         restrictor is fractional and throttles power. Both are passed to the
+         server unvalidated, so the ranges are whatever AC EVO accepts. -->
+    <div
+      class="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-surface px-3 py-1.5
+             text-[10px] uppercase tracking-wider text-muted"
+    >
+      <span class="w-4"></span>
+      <span class="flex-1">Car</span>
+      <span class="w-16 text-center" title="Added weight — makes the car slower">Ballast</span>
+      <span class="w-16 text-center" title="Air restrictor — cuts power">Restr.</span>
+    </div>
     {#each visible as car (car.internal_name)}
       {@const item = entry(car.internal_name)}
       {#if item}
@@ -169,13 +181,17 @@
           <input
             class="field num w-16 px-2 py-1 text-xs"
             type="number"
-            title="Ballast"
+            min="0"
+            step="1"
+            title="Ballast — added weight, whole numbers"
             bind:value={item.ballast}
           />
           <input
             class="field num w-16 px-2 py-1 text-xs"
             type="number"
-            title="Restrictor"
+            min="0"
+            step="0.1"
+            title="Restrictor — cuts power, fractional"
             bind:value={item.restrictor}
           />
         </label>
