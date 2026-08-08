@@ -351,7 +351,20 @@ def control(action: str) -> dict:
 
 
 def main() -> None:
-    server.run()
+    """stdio for a desktop client, streamable-http when something like n8n has
+    to reach the server over the network."""
+    transport = os.environ.get("ACEVO_MCP_TRANSPORT", "stdio")
+    if transport == "stdio":
+        return server.run()
+    server.run(
+        transport,
+        host=os.environ.get("ACEVO_MCP_HOST", "0.0.0.0"),
+        port=int(os.environ.get("ACEVO_MCP_PORT", "3200")),
+        streamable_http_path=os.environ.get("ACEVO_MCP_PATH", "/mcp"),
+        # n8n opens a fresh connection per tool call; keeping no session state
+        # avoids "session not found" on the second call.
+        stateless_http=True,
+    )
 
 
 if __name__ == "__main__":

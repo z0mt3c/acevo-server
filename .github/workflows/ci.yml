@@ -61,3 +61,14 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Build and push the MCP image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile.mcp
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-mcp:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}-mcp:${{ github.sha }}
