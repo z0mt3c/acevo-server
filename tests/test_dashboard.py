@@ -516,6 +516,16 @@ class FrontendStaticTests(unittest.TestCase):
     def test_durations_are_entered_in_hours_and_minutes(self):
         self.assertIn("joinDuration", self.source("components", "DurationField.svelte"))
 
+    def test_profile_list_renders_objects_not_strings(self):
+        """/api/configs returns {name, track, mode, modified}, not bare names."""
+        menu = self.source("components", "ProfileMenu.svelte")
+        self.assertIn("as profile (profile.name)", menu)
+        self.assertIn("profile.name", menu)
+
+    def test_profile_menu_can_open_upwards(self):
+        """In the bottom nav a menu that only drops down is offscreen."""
+        self.assertIn("dropUp", self.source("components", "ProfileMenu.svelte"))
+
     def test_log_lines_are_keyed_by_index(self):
         """Keying log lines by their text throws on the first repeated line and
         the whole list stops rendering."""

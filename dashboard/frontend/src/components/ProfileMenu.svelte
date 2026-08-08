@@ -63,21 +63,25 @@
       {#if dash.profiles.length === 0}
         <p class="px-3 py-2 text-xs text-muted">No profiles saved yet.</p>
       {:else}
-        {#each dash.profiles as name (name)}
+        {#each dash.profiles as profile (profile.name)}
           <div class="group flex items-center rounded-lg hover:bg-raised">
             <button
-              class="flex-1 px-3 py-2 text-left text-sm"
+              class="min-w-0 flex-1 px-3 py-2 text-left"
               onclick={() => {
                 open = false;
-                dash.applyProfile(name);
+                dash.applyProfile(profile.name);
               }}
             >
-              {name}
+              <span class="block truncate text-sm">{profile.name}</span>
+              <span class="block truncate text-[11px] text-muted">
+                {(profile.track || "").split("|").slice(0, 2).join(" ")}
+                {profile.mode ? `· ${/RACE_WEEKEND/i.test(profile.mode) ? "Race" : "Practice"}` : ""}
+              </span>
             </button>
             <button
               class="px-2 py-2 text-xs text-muted opacity-0 group-hover:opacity-100 hover:text-accent"
-              aria-label={`Delete ${name}`}
-              onclick={(event) => remove(name, event)}
+              aria-label={`Delete ${profile.name}`}
+              onclick={(event) => remove(profile.name, event)}
             >
               ✕
             </button>
