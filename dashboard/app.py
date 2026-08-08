@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from . import config_io, live, metadata, server_control
+from . import config_io, live, metadata, results, server_control
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -160,6 +160,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return self._send_json(server_control.status())
             if route == "/api/server/live":
                 return self._send_json(live.snapshot())
+            if route == "/api/results":
+                return self._send_json({"deliveries": results.stored()})
             if route == "/api/server/logs":
                 tail = int((parse_qs(parts.query).get("tail") or ["200"])[0] or 200)
                 return self._send_json(server_control.logs(tail=tail))
@@ -167,10 +169,29 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return self._send_json({"error": str(exc)}, 500)
         return self._send_json({"error": "not found"}, 404)
 
+    def _read_raw_body(self) -> bytes:
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return b""
+        return self.rfile.read(length) if length > 0 else b""
+
     def do_POST(self) -> None:
         if not self._authorized():
             return self._send_401()
         route = urlsplit(self.path).path
+
+        # Before the JSON parser: the game server's payload shape is unknown, and
+        # a body we cannot parse must still be captured rather than rejected.
+        if route == "/api/results":
+            raw = self._read_raw_body()
+            outcome = results.record(
+                raw,
+                self.headers.get("Content-Type", ""),
+                log_writer=lambda text: server_control.append_log(text),
+            )
+            return self._send_json(outcome)
+
         body = self._read_json_body()
         if body is None:
             return self._send_json({"error": "invalid JSON body"}, 400)

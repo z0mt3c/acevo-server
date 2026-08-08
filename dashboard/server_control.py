@@ -204,6 +204,17 @@ def status() -> dict:
         }
 
 
+def append_log(text: str) -> None:
+    """Write into the same log the dashboard shows, so out-of-band events (the
+    results webhook) are visible where everything else already is."""
+    try:
+        LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_FILE, "ab", buffering=0) as handle:
+            handle.write(text.encode("utf-8", errors="replace"))
+    except OSError:
+        pass
+
+
 def logs(tail: int = 200) -> dict:
     try:
         if not LOG_FILE.exists():
