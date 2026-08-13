@@ -35,7 +35,18 @@ class ProtocolTest(unittest.TestCase):
     def test_tools_are_listed_with_schemas(self) -> None:
         tools = self.call("tools/list")["result"]["tools"]
         names = {tool["name"] for tool in tools}
-        for expected in ("status", "set_track", "set_mode", "select_cars", "balance_by_pi", "control"):
+        for expected in (
+            "status",
+            "set_track",
+            "set_mode",
+            "select_cars",
+            "balance_by_pi",
+            "control",
+            "leaderboard",
+            "best_times",
+            "session_history",
+            "session_detail",
+        ):
             self.assertIn(expected, names)
         for tool in tools:
             self.assertTrue(tool["description"], tool["name"])
@@ -91,6 +102,21 @@ class ToolCallTest(unittest.TestCase):
         with patch.object(mcp_api, "_form", return_value={"event": {"type": "GameModeType_PRACTICE", "track": ""}}):
             result = self.call_tool("set_track", {"track": "nürburgring-monaco"})
         self.assertIn("error", result["structuredContent"])
+
+    def test_leaderboard_translates_internal_car_names(self) -> None:
+        rows = [{"driver": "Max", "car": "ks_ferrari_296_gt3", "best_ms": 96369, "at": "", "steam_id": "", "laps": 2}]
+        with (
+            patch.object(mcp_api.history, "leaderboard", return_value=rows),
+            patch.object(
+                mcp_api.metadata,
+                "build_metadata",
+                return_value={
+                    "cars": [{"internal_name": "ks_ferrari_296_gt3", "display_name": "Ferrari 296 GT3 - GT3"}]
+                },
+            ),
+        ):
+            result = self.call_tool("leaderboard", {"track": "Laguna"})
+        self.assertEqual(result["structuredContent"]["leaderboard"][0]["car"], "Ferrari 296 GT3 - GT3")
 
     def test_balance_needs_at_least_two_cars(self) -> None:
         with patch.object(mcp_api, "_form", return_value={"cars": []}):

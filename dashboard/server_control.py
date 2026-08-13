@@ -103,6 +103,15 @@ def start() -> dict:
         except OSError as exc:
             return {"ok": False, "error": f"cannot open log file {LOG_FILE}: {exc}"}
         try:
+            # Session boundary for the lap history — right after the truncate, so
+            # the recorder never mixes two server runs. Late import: history's
+            # poll() imports this module.
+            from . import history
+
+            history.notify_server_start()
+        except Exception:  # noqa: BLE001 - history must never block a server start
+            pass
+        try:
             _proc = subprocess.Popen(  # noqa: S603 - fixed script path, no shell
                 ["/usr/bin/env", "bash", str(RUN_SERVER_SCRIPT)],
                 stdout=subprocess.PIPE,

@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from . import config_io, live, mcp_api, metadata, results, server_control
+from . import config_io, history, live, mcp_api, metadata, results, server_control
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -162,6 +162,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return self._send_json(live.snapshot())
             if route == "/api/results":
                 return self._send_json({"deliveries": results.stored()})
+            if route == "/api/history/leaderboard":
+                query = parse_qs(parts.query)
+                return self._send_json(
+                    {"leaderboard": history.leaderboard((query.get("track") or [""])[0], (query.get("car") or [""])[0])}
+                )
+            if route == "/api/history/bests":
+                query = parse_qs(parts.query)
+                return self._send_json(
+                    {"bests": history.bests((query.get("track") or [""])[0], (query.get("car") or [""])[0])}
+                )
+            if route == "/api/history/sessions":
+                return self._send_json({"sessions": history.sessions()})
+            if route == "/api/history/session":
+                session_id = int((parse_qs(parts.query).get("id") or ["0"])[0] or 0)
+                return self._send_json(history.session_detail(session_id))
             if route == "/api/server/logs":
                 tail = int((parse_qs(parts.query).get("tail") or ["200"])[0] or 200)
                 return self._send_json(server_control.logs(tail=tail))
@@ -277,6 +292,8 @@ def serve(config: DashboardConfig, host: str = "0.0.0.0", port: int = 8090) -> N
 
     signal.signal(signal.SIGTERM, _shutdown)
     signal.signal(signal.SIGINT, _shutdown)
+
+    history.start_recorder()
 
     if _auto_start_enabled():
         print(f"Auto-starting AC EVO server: {server_control.start()}")

@@ -4,6 +4,7 @@
   import ConfigView from "./components/ConfigView.svelte";
   import LogsView from "./components/LogsView.svelte";
   import LiveView from "./components/LiveView.svelte";
+  import HistoryView from "./components/HistoryView.svelte";
   import ProfileMenu from "./components/ProfileMenu.svelte";
 
   let view = $state("config");
@@ -13,6 +14,7 @@
   const TABS = [
     { key: "config", label: "Config", icon: "⚙" },
     { key: "live", label: "Live", icon: "◉" },
+    { key: "history", label: "History", icon: "⏱" },
     { key: "logs", label: "Logs", icon: "▤" },
   ];
 
@@ -60,6 +62,8 @@
       <ConfigView />
     {:else if view === "live"}
       <LiveView />
+    {:else if view === "history"}
+      <HistoryView />
     {:else}
       <LogsView />
     {/if}
@@ -98,7 +102,7 @@
   {/if}
 
   <nav
-    class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)]
+    class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)]
            backdrop-blur md:hidden"
   >
     {#each TABS as tab (tab.key)}

@@ -555,6 +555,14 @@ class FrontendStaticTests(unittest.TestCase):
         """In the bottom nav a menu that only drops down is offscreen."""
         self.assertIn("dropUp", self.source("components", "ProfileMenu.svelte"))
 
+    def test_history_tab_is_wired(self):
+        app_source = self.source("App.svelte")
+        self.assertIn("HistoryView", app_source)
+        self.assertIn('key: "history"', app_source)
+        api_source = self.source("lib", "api.js")
+        for route in ("leaderboard", "bests", "sessions", "session"):
+            self.assertIn(f"/api/history/{route}", api_source)
+
     def test_log_lines_are_keyed_by_index(self):
         """Keying log lines by their text throws on the first repeated line and
         the whole list stops rendering."""

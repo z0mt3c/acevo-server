@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any, Callable
 
-from . import config_io, live, metadata, results, server_control
+from . import config_io, history, live, metadata, results, server_control
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_INFO = {"name": "acevo", "version": "1.0.0"}
@@ -171,6 +171,74 @@ def _list_profiles() -> dict:
 @tool("list_results", "Result deliveries the server posted to the dashboard webhook.")
 def _list_results() -> dict:
     return {"deliveries": results.stored()}
+
+
+def _car_names() -> dict:
+    return {car["internal_name"]: car["display_name"] for car in metadata.build_metadata()["cars"]}
+
+
+@tool(
+    "leaderboard",
+    "Ranked personal bests per driver on one track — the leaderboard. Optionally "
+    "narrowed to a single car. Times come from the recorded lap history.",
+    {
+        "type": "object",
+        "properties": {
+            "track": _string("track", "track name or part of it, e.g. 'Laguna' or 'Nordschleife'"),
+            "car": _string("car", "optional car filter, name or part of it"),
+        },
+        "required": ["track"],
+    },
+)
+def _leaderboard(track: str, car: str = "") -> dict:
+    rows = history.leaderboard(track, car)
+    names = _car_names()
+    for row in rows:
+        row["car"] = names.get(row["car"], row["car"])
+    return {"track": track, "count": len(rows), "leaderboard": rows}
+
+
+@tool(
+    "best_times",
+    "The record holder for every track+car combination, with driver name and date.",
+    {
+        "type": "object",
+        "properties": {
+            "track": _string("track", "optional track filter"),
+            "car": _string("car", "optional car filter"),
+        },
+    },
+)
+def _best_times(track: str = "", car: str = "") -> dict:
+    rows = history.bests(track, car)
+    names = _car_names()
+    for row in rows:
+        row["car"] = names.get(row["car"], row["car"])
+    return {"count": len(rows), "bests": rows}
+
+
+@tool(
+    "session_history",
+    "Past sessions in which someone actually drove: when, which track, how many "
+    "drivers and laps. Use session_detail for one session's standings.",
+    {"type": "object", "properties": {"limit": {"type": "integer", "default": 20}}},
+)
+def _session_history(limit: int = 20) -> dict:
+    return {"sessions": history.sessions(limit=int(limit))}
+
+
+@tool(
+    "session_detail",
+    "One session's standings (best lap per driver and car) and its laps.",
+    {"type": "object", "properties": {"id": {"type": "integer"}}, "required": ["id"]},
+)
+def _session_detail(id: int) -> dict:
+    detail = history.session_detail(int(id))
+    if "standings" in detail:
+        names = _car_names()
+        for row in detail["standings"]:
+            row["car"] = names.get(row["car"], row["car"])
+    return detail
 
 
 # --- changing ----------------------------------------------------------------
