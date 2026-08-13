@@ -15,6 +15,20 @@
   // Tracks that actually have laps recorded, for the picker.
   const knownTracks = $derived([...new Set(records.map((row) => row.track))]);
 
+  // Car suggestions come from the history itself: suggesting a car nobody has
+  // driven yet would only ever produce an empty leaderboard.
+  const knownCars = $derived.by(() => {
+    const seen = new Map();
+    for (const row of records) {
+      if (row.car && !seen.has(row.car)) seen.set(row.car, carLabel(row.car, dash.meta.cars));
+    }
+    return [...seen].map(([internal, label]) => ({ internal, label }));
+  });
+
+  // The input shows display names, the API filters on internal names.
+  const resolveCar = (text) =>
+    knownCars.find((entry) => entry.label.toLowerCase() === (text || "").toLowerCase())?.internal ?? text;
+
   async function refresh() {
     const [bestsResult, sessionsResult] = await Promise.all([api.bests("", ""), api.sessions()]);
     records = bestsResult.bests || [];
@@ -35,7 +49,7 @@
 
   async function pickCarFilter(value) {
     carFilter = value;
-    if (track) leaderboard = (await api.leaderboard(track, carFilter)).leaderboard || [];
+    if (track) leaderboard = (await api.leaderboard(track, resolveCar(carFilter))).leaderboard || [];
   }
 
   async function openSession(id) {
@@ -90,9 +104,15 @@
         <input
           class="field w-auto flex-1 py-1.5 text-sm"
           placeholder="Filter by car…"
+          list="leaderboard-cars"
           value={carFilter}
           onchange={(e) => pickCarFilter(e.currentTarget.value)}
         />
+        <datalist id="leaderboard-cars">
+          {#each knownCars as entry (entry.internal)}
+            <option value={entry.label}></option>
+          {/each}
+        </datalist>
       </div>
       <table class="w-full text-sm">
         <thead>

@@ -113,6 +113,67 @@ class RecorderTest(HistoryBase):
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM laps").fetchone()[0], 1)
 
 
+class RecordEventTest(HistoryBase):
+    """A lap that takes P1 fires a webhook — that is what ends up in Discord."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.events = []
+        for patcher in (
+            patch.object(history, "WEBHOOK_URL", "http://n8n.test/webhook"),
+            patch.object(history, "_post_webhook", side_effect=self.events.append),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        history.poll()
+        history.notify_server_start()
+
+    def test_first_lap_on_a_track_is_a_track_record(self) -> None:
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.assertEqual(len(self.events), 1)
+        event = self.events[0]
+        self.assertEqual(event["event"], "track_record")
+        self.assertEqual(event["driver"], "Max")
+        self.assertEqual(event["lap_time"], "1:40.000")
+        self.assertEqual(event["previous_driver"], "")
+
+    def test_a_slower_lap_fires_nothing(self) -> None:
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.events.clear()
+        self.drive(car_id="c" * 16 + "-" + "d" * 16, name="Rob", steam_id="9", times=("01:45.000",))
+        history.poll()
+        self.assertEqual(self.events, [])
+
+    def test_beating_the_overall_best_is_a_track_record_with_the_previous_holder(self) -> None:
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.events.clear()
+        self.drive(car_id="c" * 16 + "-" + "d" * 16, name="Zoe", steam_id="2", times=("01:38.000",))
+        history.poll()
+        self.assertEqual(self.events[0]["event"], "track_record")
+        self.assertEqual(self.events[0]["previous_driver"], "Max")
+        self.assertEqual(self.events[0]["previous_time"], "1:40.000")
+
+    def test_fastest_in_a_slower_car_is_a_car_record(self) -> None:
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.events.clear()
+        self.drive(
+            car_id="c" * 16 + "-" + "d" * 16, name="Zoe", steam_id="2", car="ks_bmw_m4_gt3", times=("01:42.000",)
+        )
+        history.poll()
+        self.assertEqual(len(self.events), 1)
+        self.assertEqual(self.events[0]["event"], "car_record")
+
+    def test_no_webhook_url_means_no_events(self) -> None:
+        with patch.object(history, "WEBHOOK_URL", ""):
+            self.drive(times=("01:40.000",))
+            history.poll()
+        self.assertEqual(self.events, [])
+
+
 class LeaderboardTest(HistoryBase):
     def seed(self) -> None:
         history.poll()

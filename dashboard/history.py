@@ -13,15 +13,19 @@ would double-count every lap a previous dashboard process stored.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sqlite3
 import threading
 import time
+import urllib.request
 from pathlib import Path
 
 DB_PATH = Path(os.environ.get("ACEVO_HISTORY_DB", "/data/history.db"))
 CONFIG_PATH = Path(os.environ.get("ACEVO_DASHBOARD_CONFIG", "/data/server_launcher.json"))
+# When set, a lap that takes P1 is POSTed here — n8n turns that into a Discord post.
+WEBHOOK_URL = os.environ.get("ACEVO_LEADER_WEBHOOK", "")
 
 _LINE_TIME = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
 
@@ -133,16 +137,118 @@ def poll() -> int:
             at = stamp.group(1) if stamp else time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             rows.append((session_id, at, info.get("name", ""), info.get("steam_id", ""), info.get("car", ""), lap_ms))
 
+    events = _detect_records(session_id, rows) if rows and WEBHOOK_URL else []
     if rows:
         with _connect() as conn:
             conn.executemany(
                 "INSERT INTO laps (session_id, at, driver, steam_id, car, lap_ms) VALUES (?, ?, ?, ?, ?, ?)",
                 rows,
             )
+    for event in events:
+        _post_webhook(event)
     with _lock:
         _state["offset"] = size
         _state["cars"] = cars
     return len(rows)
+
+
+def _format_lap(lap_ms: int | None) -> str:
+    if not lap_ms:
+        return ""
+    return f"{lap_ms // 60000}:{(lap_ms % 60000) // 1000:02d}.{lap_ms % 1000:03d}"
+
+
+def _car_label(internal: str) -> str:
+    try:
+        from . import metadata
+
+        for car in metadata.build_metadata()["cars"]:
+            if car["internal_name"] == internal:
+                return car["display_name"]
+    except Exception:  # noqa: BLE001 - a label is nice to have, not load-bearing
+        pass
+    return internal
+
+
+def _detect_records(session_id: int, rows: list[tuple]) -> list[dict]:
+    """Compare the new laps against the stored bests BEFORE they are inserted.
+
+    One event per record lap: taking the overall track best is a track_record,
+    merely leading one car's class is a car_record.
+    """
+    with _connect() as conn:
+        session = conn.execute("SELECT track FROM sessions WHERE id = ?", (session_id,)).fetchone()
+        track = session["track"] if session else ""
+        if not track:
+            return []
+
+        def stored_best(car: str | None = None) -> tuple[int | None, str]:
+            query = (
+                "SELECT MIN(l.lap_ms) AS ms, l.driver AS driver FROM laps l "
+                "JOIN sessions s ON s.id = l.session_id WHERE l.lap_ms > 0 AND s.track = ?"
+            )
+            params: list = [track]
+            if car is not None:
+                query += " AND l.car = ?"
+                params.append(car)
+            best = conn.execute(query, params).fetchone()
+            return (best["ms"], best["driver"] or "") if best and best["ms"] else (None, "")
+
+        overall_ms, overall_driver = stored_best()
+        car_bests = {car: stored_best(car) for car in {row[4] for row in rows}}
+
+    events: list[dict] = []
+    for _sid, _at, driver, _steam_id, car, lap_ms in rows:
+        base = {
+            "track": track,
+            "car": _car_label(car),
+            "driver": driver or "Unknown",
+            "lap_ms": lap_ms,
+            "lap_time": _format_lap(lap_ms),
+        }
+        if overall_ms is None or lap_ms < overall_ms:
+            events.append(
+                {
+                    "event": "track_record",
+                    **base,
+                    "previous_driver": overall_driver,
+                    "previous_time": _format_lap(overall_ms),
+                }
+            )
+            overall_ms, overall_driver = lap_ms, driver
+            car_bests[car] = (lap_ms, driver)
+        else:
+            car_ms, car_driver = car_bests.get(car, (None, ""))
+            if car_ms is None or lap_ms < car_ms:
+                events.append(
+                    {
+                        "event": "car_record",
+                        **base,
+                        "previous_driver": car_driver,
+                        "previous_time": _format_lap(car_ms),
+                    }
+                )
+                car_bests[car] = (lap_ms, driver)
+    return events
+
+
+def _post_webhook(payload: dict) -> None:
+    """Fire and forget: a slow or dead n8n must never stall the recorder."""
+    if not WEBHOOK_URL:
+        return
+
+    def send() -> None:
+        try:
+            request = urllib.request.Request(
+                WEBHOOK_URL,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(request, timeout=5).close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    threading.Thread(target=send, daemon=True, name="leader-webhook").start()
 
 
 def snapshot_backup() -> Path:
