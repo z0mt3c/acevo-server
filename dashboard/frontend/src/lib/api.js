@@ -19,8 +19,11 @@ export const api = {
   status: () => request("/api/server/status"),
   live: () => request("/api/server/live"),
   logs: (tail) => request(`/api/server/logs?tail=${tail}`),
-  leaderboard: (track, car) =>
-    request(`/api/history/leaderboard?track=${encodeURIComponent(track)}&car=${encodeURIComponent(car || "")}`),
+  leaderboard: (track, car, carClass, phase) =>
+    request(
+      `/api/history/leaderboard?track=${encodeURIComponent(track)}&car=${encodeURIComponent(car || "")}` +
+        `&car_class=${encodeURIComponent(carClass || "")}&phase=${encodeURIComponent(phase || "")}`,
+    ),
   bests: (track, car) =>
     request(`/api/history/bests?track=${encodeURIComponent(track || "")}&car=${encodeURIComponent(car || "")}`),
   sessions: () => request("/api/history/sessions"),

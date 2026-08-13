@@ -26,8 +26,35 @@ DB_PATH = Path(os.environ.get("ACEVO_HISTORY_DB", "/data/history.db"))
 CONFIG_PATH = Path(os.environ.get("ACEVO_DASHBOARD_CONFIG", "/data/server_launcher.json"))
 # When set, a lap that takes P1 is POSTed here — n8n turns that into a Discord post.
 WEBHOOK_URL = os.environ.get("ACEVO_LEADER_WEBHOOK", "")
+# n8n's /webhook/* routes are public — the shared secret is what lets the flow
+# reject anyone else who finds the URL.
+WEBHOOK_TOKEN = os.environ.get("ACEVO_LEADER_WEBHOOK_TOKEN", "")
 
 _LINE_TIME = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
+# "TimeAttackRemote Practice created" — the only phase marker the log offers.
+_PHASE = re.compile(r"Remote (Practice|Qualify|Warmup|Race) created")
+
+# The log names cars in its own namespace (ks_ferrari_296_gt3), which matches
+# neither the metadata's internal_name (preset_296gt3_mech_1) nor its display
+# name — so the class has to come out of the log name itself. Order matters:
+# a GT3 Cup is a one-make cup car, not a GT3.
+_CLASS_PATTERNS = (
+    ("cup", re.compile(r"cup|trofeo|challenge|academy|clubsport")),
+    ("formula", re.compile(r"f2004|sf_?-?25|formula|_f1\b")),
+    ("gt3", re.compile(r"gt3")),
+    ("gt2", re.compile(r"gt2")),
+    ("gt4", re.compile(r"gt4")),
+)
+_CLASS_LABELS = {"cup": "Cup", "formula": "Formula", "gt3": "GT3", "gt2": "GT2", "gt4": "GT4"}
+
+
+def car_class(car_name: str) -> str:
+    lowered = (car_name or "").lower()
+    for name, pattern in _CLASS_PATTERNS:
+        if pattern.search(lowered):
+            return name
+    return ""
+
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -50,12 +77,12 @@ CREATE INDEX IF NOT EXISTS idx_laps_car ON laps(car, lap_ms);
 """
 
 _lock = threading.Lock()
-_state: dict = {"offset": None, "session_id": None, "cars": {}}
+_state: dict = {"offset": None, "session_id": None, "cars": {}, "phase": ""}
 
 
 def reset_state() -> None:
     with _lock:
-        _state.update(offset=None, session_id=None, cars={})
+        _state.update(offset=None, session_id=None, cars={}, phase="")
 
 
 def _connect() -> sqlite3.Connection:
@@ -63,6 +90,8 @@ def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.executescript(_SCHEMA)
+    if not any(row[1] == "phase" for row in conn.execute("PRAGMA table_info(laps)")):
+        conn.execute("ALTER TABLE laps ADD COLUMN phase TEXT NOT NULL DEFAULT ''")
     return conn
 
 
@@ -88,7 +117,7 @@ def notify_server_start() -> None:
         )
         session_id = cursor.lastrowid
     with _lock:
-        _state.update(offset=0, session_id=session_id, cars={})
+        _state.update(offset=0, session_id=session_id, cars={}, phase="")
 
 
 def poll() -> int:
@@ -106,6 +135,7 @@ def poll() -> int:
         offset = _state["offset"]
         session_id = _state["session_id"]
         cars = dict(_state["cars"])
+        phase = _state["phase"]
 
     if offset is None:
         with _lock:
@@ -122,7 +152,9 @@ def poll() -> int:
 
     rows = []
     for line in text.splitlines():
-        if (hit := live._CONNECT.search(line)) is not None:
+        if (hit := _PHASE.search(line)) is not None:
+            phase = hit.group(1).lower()
+        elif (hit := live._CONNECT.search(line)) is not None:
             entry = cars.setdefault(live._key(hit.group(1)), {})
             entry["name"] = hit.group(2).strip()
             entry["steam_id"] = hit.group(3)
@@ -135,13 +167,15 @@ def poll() -> int:
             info = cars.get(live._key(hit.group(1)), {})
             stamp = _LINE_TIME.match(line)
             at = stamp.group(1) if stamp else time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-            rows.append((session_id, at, info.get("name", ""), info.get("steam_id", ""), info.get("car", ""), lap_ms))
+            rows.append(
+                (session_id, at, info.get("name", ""), info.get("steam_id", ""), info.get("car", ""), lap_ms, phase)
+            )
 
     events = _detect_records(session_id, rows) if rows and WEBHOOK_URL else []
     if rows:
         with _connect() as conn:
             conn.executemany(
-                "INSERT INTO laps (session_id, at, driver, steam_id, car, lap_ms) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO laps (session_id, at, driver, steam_id, car, lap_ms, phase) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 rows,
             )
     for event in events:
@@ -149,6 +183,7 @@ def poll() -> int:
     with _lock:
         _state["offset"] = size
         _state["cars"] = cars
+        _state["phase"] = phase
     return len(rows)
 
 
@@ -167,14 +202,16 @@ def _car_label(internal: str) -> str:
                 return car["display_name"]
     except Exception:  # noqa: BLE001 - a label is nice to have, not load-bearing
         pass
-    return internal
+    # Log car names (ks_maserati_mc20_gt2) match no metadata entry — prettify.
+    words = (internal or "").removeprefix("ks_").split("_")
+    return " ".join(w.upper() if (len(w) <= 3 or any(c.isdigit() for c in w)) else w.capitalize() for w in words)
 
 
 def _detect_records(session_id: int, rows: list[tuple]) -> list[dict]:
     """Compare the new laps against the stored bests BEFORE they are inserted.
 
-    One event per record lap: taking the overall track best is a track_record,
-    merely leading one car's class is a car_record.
+    Tiers, highest wins: track record (fastest overall on the track), class
+    record (fastest of the car's class), car record (fastest in this exact car).
     """
     with _connect() as conn:
         session = conn.execute("SELECT track FROM sessions WHERE id = ?", (session_id,)).fetchone()
@@ -182,26 +219,45 @@ def _detect_records(session_id: int, rows: list[tuple]) -> list[dict]:
         if not track:
             return []
 
-        def stored_best(car: str | None = None) -> tuple[int | None, str]:
+        def stored_best(cars_in: list[str] | None = None) -> tuple[int | None, str]:
             query = (
                 "SELECT MIN(l.lap_ms) AS ms, l.driver AS driver FROM laps l "
                 "JOIN sessions s ON s.id = l.session_id WHERE l.lap_ms > 0 AND s.track = ?"
             )
             params: list = [track]
-            if car is not None:
-                query += " AND l.car = ?"
-                params.append(car)
+            if cars_in is not None:
+                if not cars_in:
+                    return (None, "")
+                query += f" AND l.car IN ({','.join('?' * len(cars_in))})"
+                params.extend(cars_in)
             best = conn.execute(query, params).fetchone()
             return (best["ms"], best["driver"] or "") if best and best["ms"] else (None, "")
 
-        overall_ms, overall_driver = stored_best()
-        car_bests = {car: stored_best(car) for car in {row[4] for row in rows}}
+        known_cars = [
+            row["car"]
+            for row in conn.execute(
+                "SELECT DISTINCT l.car FROM laps l JOIN sessions s ON s.id = l.session_id WHERE s.track = ?",
+                (track,),
+            )
+        ]
+        overall = stored_best()
+        new_cars = {row[4] for row in rows}
+        car_bests = {car: stored_best([car]) for car in new_cars}
+        class_bests = {}
+        for car in new_cars:
+            cls = car_class(car)
+            if cls and cls not in class_bests:
+                class_bests[cls] = stored_best([c for c in set(known_cars) | new_cars if car_class(c) == cls])
 
     events: list[dict] = []
-    for _sid, _at, driver, _steam_id, car, lap_ms in rows:
+    overall_ms, overall_driver = overall
+    for _sid, _at, driver, _steam_id, car, lap_ms, phase in rows:
+        cls = car_class(car)
         base = {
             "track": track,
             "car": _car_label(car),
+            "car_class": _CLASS_LABELS.get(cls, ""),
+            "phase": phase,
             "driver": driver or "Unknown",
             "lap_ms": lap_ms,
             "lap_time": _format_lap(lap_ms),
@@ -216,19 +272,30 @@ def _detect_records(session_id: int, rows: list[tuple]) -> list[dict]:
                 }
             )
             overall_ms, overall_driver = lap_ms, driver
+            if cls:
+                class_bests[cls] = (lap_ms, driver)
             car_bests[car] = (lap_ms, driver)
-        else:
-            car_ms, car_driver = car_bests.get(car, (None, ""))
-            if car_ms is None or lap_ms < car_ms:
+            continue
+        if cls:
+            class_ms, class_driver = class_bests.get(cls, (None, ""))
+            if class_ms is None or lap_ms < class_ms:
                 events.append(
                     {
-                        "event": "car_record",
+                        "event": "class_record",
                         **base,
-                        "previous_driver": car_driver,
-                        "previous_time": _format_lap(car_ms),
+                        "previous_driver": class_driver,
+                        "previous_time": _format_lap(class_ms),
                     }
                 )
+                class_bests[cls] = (lap_ms, driver)
                 car_bests[car] = (lap_ms, driver)
+                continue
+        car_ms, car_driver = car_bests.get(car, (None, ""))
+        if car_ms is None or lap_ms < car_ms:
+            events.append(
+                {"event": "car_record", **base, "previous_driver": car_driver, "previous_time": _format_lap(car_ms)}
+            )
+            car_bests[car] = (lap_ms, driver)
     return events
 
 
@@ -239,10 +306,13 @@ def _post_webhook(payload: dict) -> None:
 
     def send() -> None:
         try:
+            headers = {"Content-Type": "application/json"}
+            if WEBHOOK_TOKEN:
+                headers["X-Acevo-Token"] = WEBHOOK_TOKEN
             request = urllib.request.Request(
                 WEBHOOK_URL,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers=headers,
             )
             urllib.request.urlopen(request, timeout=5).close()
         except Exception:  # noqa: BLE001
@@ -288,22 +358,39 @@ def start_recorder(interval: float = 3.0, backup_every: float = 24 * 3600) -> th
 # --- queries -----------------------------------------------------------------
 
 
-def leaderboard(track: str, car: str = "") -> list[dict]:
-    """Each driver's personal best on a track, ranked. `car` narrows to one car."""
-    query = """
-        SELECT l.driver, l.steam_id, l.car, MIN(l.lap_ms) AS best_ms, l.at, COUNT(*) AS laps
-        FROM laps l JOIN sessions s ON s.id = l.session_id
-        WHERE l.lap_ms > 0 AND s.track LIKE ?
-    """
-    params: list = [f"%{track}%"]
-    if car:
-        query += " AND l.car LIKE ?"
-        params.append(f"%{car}%")
-    # Bare columns next to MIN() resolve to the winning row in SQLite, which is
-    # exactly what puts the record car and date beside the record time.
-    query += " GROUP BY COALESCE(NULLIF(l.steam_id, ''), l.driver) ORDER BY best_ms"
+def leaderboard(track: str, car: str = "", car_cls: str = "", phase: str = "") -> list[dict]:
+    """Each driver's personal best on a track, ranked. Filters: exact-ish car
+    name, car class (gt3, gt2, ...) and session phase (practice, qualify, race)."""
     with _connect() as conn:
-        return [dict(row) for row in conn.execute(query, params)]
+        query = """
+            SELECT l.driver, l.steam_id, l.car, MIN(l.lap_ms) AS best_ms, l.at, l.phase, COUNT(*) AS laps
+            FROM laps l JOIN sessions s ON s.id = l.session_id
+            WHERE l.lap_ms > 0 AND s.track LIKE ?
+        """
+        params: list = [f"%{track}%"]
+        if car:
+            query += " AND l.car LIKE ?"
+            params.append(f"%{car}%")
+        if car_cls:
+            cars_in = [
+                row["car"]
+                for row in conn.execute("SELECT DISTINCT car FROM laps")
+                if car_class(row["car"]) == car_cls.lower()
+            ]
+            if not cars_in:
+                return []
+            query += f" AND l.car IN ({','.join('?' * len(cars_in))})"
+            params.extend(cars_in)
+        if phase:
+            query += " AND l.phase = ?"
+            params.append(phase.lower())
+        # Bare columns next to MIN() resolve to the winning row in SQLite, which is
+        # exactly what puts the record car and date beside the record time.
+        query += " GROUP BY COALESCE(NULLIF(l.steam_id, ''), l.driver) ORDER BY best_ms"
+        rows = [dict(row) for row in conn.execute(query, params)]
+    for row in rows:
+        row["car_class"] = _CLASS_LABELS.get(car_class(row["car"]), "")
+    return rows
 
 
 def bests(track: str = "", car: str = "") -> list[dict]:
@@ -322,7 +409,10 @@ def bests(track: str = "", car: str = "") -> list[dict]:
         params.append(f"%{car}%")
     query += " GROUP BY s.track, l.car ORDER BY s.track, best_ms"
     with _connect() as conn:
-        return [dict(row) for row in conn.execute(query, params)]
+        rows = [dict(row) for row in conn.execute(query, params)]
+    for row in rows:
+        row["car_class"] = _CLASS_LABELS.get(car_class(row["car"]), "")
+    return rows
 
 
 def sessions(limit: int = 50, include_empty: bool = False) -> list[dict]:
@@ -355,7 +445,7 @@ def session_detail(session_id: int) -> dict:
             (session_id,),
         ).fetchall()
         laps = conn.execute(
-            "SELECT at, driver, car, lap_ms FROM laps WHERE session_id = ? ORDER BY id LIMIT 500",
+            "SELECT at, driver, car, lap_ms, phase FROM laps WHERE session_id = ? ORDER BY id LIMIT 500",
             (session_id,),
         ).fetchall()
     return {

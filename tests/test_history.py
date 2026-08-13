@@ -19,6 +19,7 @@ CONNECT = (
     "[2026-08-09 10:00:0{i}.001] [gameplay] [info] {steam_id} connected (true) on car {car}, with new carId {car_id}\n"
 )
 LAP = "[2026-08-09 10:1{i}:00.000] [gameplay] [info] New lap carId {car_id}: {time}\n"
+PHASE = "[2026-08-09 10:0{i}:30.000] [gameplay] [info] TimeAttackRemote {phase} created\n"
 
 
 class HistoryBase(unittest.TestCase):
@@ -156,7 +157,8 @@ class RecordEventTest(HistoryBase):
         self.assertEqual(self.events[0]["previous_driver"], "Max")
         self.assertEqual(self.events[0]["previous_time"], "1:40.000")
 
-    def test_fastest_in_a_slower_car_is_a_car_record(self) -> None:
+    def test_fastest_in_a_slower_car_of_the_same_class_is_a_car_record(self) -> None:
+        """Ferrari GT3 holds the class best, so a slower BMW GT3 only sets a car record."""
         self.drive(times=("01:40.000",))
         history.poll()
         self.events.clear()
@@ -167,11 +169,78 @@ class RecordEventTest(HistoryBase):
         self.assertEqual(len(self.events), 1)
         self.assertEqual(self.events[0]["event"], "car_record")
 
+    def test_fastest_of_another_class_is_a_class_record(self) -> None:
+        """Track best is a GT3; the first GT2 lap leads its class, not the track."""
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.events.clear()
+        self.drive(
+            car_id="c" * 16 + "-" + "d" * 16, name="Zoe", steam_id="2", car="ks_ktm_xbow_gt2", times=("01:42.000",)
+        )
+        history.poll()
+        self.assertEqual(len(self.events), 1)
+        self.assertEqual(self.events[0]["event"], "class_record")
+        self.assertEqual(self.events[0]["car_class"], "GT2")
+
+    def test_second_car_of_a_led_class_gets_only_the_car_record(self) -> None:
+        self.drive(times=("01:40.000",))
+        history.poll()
+        self.drive(
+            car_id="c" * 16 + "-" + "d" * 16, name="Zoe", steam_id="2", car="ks_ktm_xbow_gt2", times=("01:42.000",)
+        )
+        history.poll()
+        self.events.clear()
+        self.drive(
+            car_id="e" * 16 + "-" + "f" * 16, name="Rob", steam_id="3", car="ks_maserati_mc20_gt2", times=("01:43.000",)
+        )
+        history.poll()
+        self.assertEqual(len(self.events), 1)
+        self.assertEqual(self.events[0]["event"], "car_record")
+
+    def test_laps_carry_the_session_phase(self) -> None:
+        with open(self.log, "a", encoding="utf-8") as handle:
+            handle.write(PHASE.format(i=1, phase="Qualify"))
+        self.drive(times=("01:40.000",))
+        history.poll()
+        session_id = history.sessions(include_empty=True)[0]["id"]
+        laps = history.session_detail(session_id)["laps"]
+        self.assertEqual(laps[0]["phase"], "qualify")
+        self.assertEqual(self.events[0]["phase"], "qualify")
+
+    def test_leaderboard_filters_by_phase_and_class(self) -> None:
+        with open(self.log, "a", encoding="utf-8") as handle:
+            handle.write(PHASE.format(i=1, phase="Race"))
+        self.drive(times=("01:40.000",))
+        self.drive(
+            car_id="c" * 16 + "-" + "d" * 16, name="Zoe", steam_id="2", car="ks_ktm_xbow_gt2", times=("01:42.000",)
+        )
+        history.poll()
+        self.assertEqual(len(history.leaderboard("Laguna", phase="race")), 2)
+        self.assertEqual(history.leaderboard("Laguna", phase="practice"), [])
+        gt2 = history.leaderboard("Laguna", car_cls="gt2")
+        self.assertEqual([row["driver"] for row in gt2], ["Zoe"])
+        self.assertEqual(gt2[0]["car_class"], "GT2")
+
     def test_no_webhook_url_means_no_events(self) -> None:
         with patch.object(history, "WEBHOOK_URL", ""):
             self.drive(times=("01:40.000",))
             history.poll()
         self.assertEqual(self.events, [])
+
+
+class CarClassTest(unittest.TestCase):
+    def test_infers_classes_from_log_names(self) -> None:
+        cases = {
+            "ks_ferrari_296_gt3": "gt3",
+            "ks_porsche_911_gt3_cup": "cup",
+            "ks_maserati_mc20_gt2": "gt2",
+            "ks_ferrari_f2004": "formula",
+            "ks_mazda_mx5_cup": "cup",
+            "ks_audi_r8_lms_gt4": "gt4",
+            "ks_alpine_a110s": "",
+        }
+        for name, expected in cases.items():
+            self.assertEqual(history.car_class(name), expected, name)
 
 
 class LeaderboardTest(HistoryBase):

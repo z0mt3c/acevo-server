@@ -186,12 +186,14 @@ def _car_names() -> dict:
         "properties": {
             "track": _string("track", "track name or part of it, e.g. 'Laguna' or 'Nordschleife'"),
             "car": _string("car", "optional car filter, name or part of it"),
+            "car_class": _string("car_class", "optional class filter: gt3, gt2, gt4, formula, cup"),
+            "phase": _string("phase", "optional session phase: practice, qualify, warmup, race"),
         },
         "required": ["track"],
     },
 )
-def _leaderboard(track: str, car: str = "") -> dict:
-    rows = history.leaderboard(track, car)
+def _leaderboard(track: str, car: str = "", car_class: str = "", phase: str = "") -> dict:
+    rows = history.leaderboard(track, car, car_class, phase)
     names = _car_names()
     for row in rows:
         row["car"] = names.get(row["car"], row["car"])
@@ -294,8 +296,16 @@ def _set_mode(mode: str, apply: bool = False) -> dict:
     form["event"]["track"] = chosen["token"]
 
     if race and not form["sessions"]["race"]["length_sec"] and not form["sessions"]["qualify"]["length_sec"]:
-        for name, seconds in (("practice", 1800), ("qualify", 900), ("warmup", 300), ("race", 2700)):
+        # Daytime starts on purpose: the in-game clock defaults to midnight otherwise.
+        for name, seconds, hour in (
+            ("practice", 1800, 10),
+            ("qualify", 900, 13),
+            ("warmup", 300, 13),
+            ("race", 2700, 14),
+        ):
             form["sessions"][name]["length_sec"] = seconds
+            form["sessions"][name]["hour"] = hour
+            form["sessions"][name]["minute"] = 0
 
     return {
         "mode": "race weekend" if race else "practice",

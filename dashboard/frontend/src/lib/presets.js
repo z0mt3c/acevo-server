@@ -1,5 +1,8 @@
 const minutes = (value) => value * 60;
 
+/** In-game start times; without them a weekend configured via preset runs at midnight. */
+export const DAYTIME_STARTS = { practice: 10, qualify: 13, warmup: 13, race: 14 };
+
 /**
  * Race weekend shapes. Switching the mode used to leave qualify, warmup and race
  * at zero, which is a weekend without a race — so a preset is applied whenever

@@ -165,7 +165,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
             if route == "/api/history/leaderboard":
                 query = parse_qs(parts.query)
                 return self._send_json(
-                    {"leaderboard": history.leaderboard((query.get("track") or [""])[0], (query.get("car") or [""])[0])}
+                    {
+                        "leaderboard": history.leaderboard(
+                            (query.get("track") or [""])[0],
+                            (query.get("car") or [""])[0],
+                            (query.get("car_class") or [""])[0],
+                            (query.get("phase") or [""])[0],
+                        )
+                    }
                 )
             if route == "/api/history/bests":
                 query = parse_qs(parts.query)

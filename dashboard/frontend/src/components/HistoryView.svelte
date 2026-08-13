@@ -6,6 +6,8 @@
   let mode = $state("leaderboard"); // leaderboard | records | sessions
   let track = $state("");
   let carFilter = $state("");
+  let classFilter = $state("");
+  let phaseFilter = $state("");
   let leaderboard = $state([]);
   let records = $state([]);
   let sessions = $state([]);
@@ -29,14 +31,19 @@
   const resolveCar = (text) =>
     knownCars.find((entry) => entry.label.toLowerCase() === (text || "").toLowerCase())?.internal ?? text;
 
+  const loadBoard = async () =>
+    ((await api.leaderboard(track, resolveCar(carFilter), classFilter, phaseFilter)).leaderboard ?? []);
+
   async function refresh() {
     const [bestsResult, sessionsResult] = await Promise.all([api.bests("", ""), api.sessions()]);
     records = bestsResult.bests || [];
     sessions = sessionsResult.sessions || [];
     if (!track && records.length) track = records[0].track;
-    if (track) leaderboard = (await api.leaderboard(track, carFilter)).leaderboard || [];
+    if (track) leaderboard = await loadBoard();
     loaded = true;
   }
+
+  const knownClasses = $derived([...new Set(records.map((row) => row.car_class).filter(Boolean))]);
 
   $effect(() => {
     refresh();
@@ -44,12 +51,22 @@
 
   async function pickTrack(value) {
     track = value;
-    leaderboard = (await api.leaderboard(track, carFilter)).leaderboard || [];
+    leaderboard = await loadBoard();
   }
 
   async function pickCarFilter(value) {
     carFilter = value;
-    if (track) leaderboard = (await api.leaderboard(track, resolveCar(carFilter))).leaderboard || [];
+    if (track) leaderboard = await loadBoard();
+  }
+
+  async function pickClass(value) {
+    classFilter = value;
+    if (track) leaderboard = await loadBoard();
+  }
+
+  async function pickPhase(value) {
+    phaseFilter = value;
+    if (track) leaderboard = await loadBoard();
   }
 
   async function openSession(id) {
@@ -108,6 +125,19 @@
           value={carFilter}
           onchange={(e) => pickCarFilter(e.currentTarget.value)}
         />
+        <select class="field w-auto py-1.5 text-sm" value={classFilter} onchange={(e) => pickClass(e.currentTarget.value)}>
+          <option value="">All classes</option>
+          {#each knownClasses as cls (cls)}
+            <option value={cls.toLowerCase()}>{cls}</option>
+          {/each}
+        </select>
+        <select class="field w-auto py-1.5 text-sm" value={phaseFilter} onchange={(e) => pickPhase(e.currentTarget.value)}>
+          <option value="">All phases</option>
+          <option value="practice">Practice</option>
+          <option value="qualify">Qualify</option>
+          <option value="warmup">Warmup</option>
+          <option value="race">Race</option>
+        </select>
         <datalist id="leaderboard-cars">
           {#each knownCars as entry (entry.internal)}
             <option value={entry.label}></option>

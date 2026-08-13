@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { trackIdentity } from "./format.js";
-import { SESSION_PRESETS, DEFAULT_WEEKEND } from "./presets.js";
+import { SESSION_PRESETS, DEFAULT_WEEKEND, DAYTIME_STARTS } from "./presets.js";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -84,6 +84,8 @@ class Dashboard {
     if (!preset) return;
     for (const [session, length] of Object.entries(preset.sessions)) {
       this.form.sessions[session].length_sec = length;
+      this.form.sessions[session].hour = DAYTIME_STARTS[session] ?? 12;
+      this.form.sessions[session].minute = 0;
     }
     // A timed race is the sane default; laps stay available in the race panel.
     if (preset.sessions.race > 0) {
