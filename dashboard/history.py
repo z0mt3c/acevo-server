@@ -27,19 +27,19 @@ _LINE_TIME = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  started_at TEXT NOT NULL,
-  track TEXT NOT NULL DEFAULT '',
-  mode TEXT NOT NULL DEFAULT ''
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    started_at TEXT NOT NULL,
+    track TEXT NOT NULL DEFAULT '',
+    mode TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS laps (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id INTEGER NOT NULL,
-  at TEXT NOT NULL,
-  driver TEXT NOT NULL DEFAULT '',
-  steam_id TEXT NOT NULL DEFAULT '',
-  car TEXT NOT NULL DEFAULT '',
-  lap_ms INTEGER NOT NULL
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    at TEXT NOT NULL,
+    driver TEXT NOT NULL DEFAULT '',
+    steam_id TEXT NOT NULL DEFAULT '',
+    car TEXT NOT NULL DEFAULT '',
+    lap_ms INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_laps_session ON laps(session_id);
 CREATE INDEX IF NOT EXISTS idx_laps_car ON laps(car, lap_ms);
@@ -223,9 +223,9 @@ def sessions(limit: int = 50, include_empty: bool = False) -> list[dict]:
     having = "" if include_empty else "HAVING laps > 0"
     query = f"""
         SELECT s.id, s.started_at, s.track, s.mode,
-               COUNT(l.id) AS laps,
-               COUNT(DISTINCT COALESCE(NULLIF(l.steam_id, ''), l.driver)) AS drivers,
-               MIN(l.lap_ms) AS best_ms
+            COUNT(l.id) AS laps,
+            COUNT(DISTINCT COALESCE(NULLIF(l.steam_id, ''), l.driver)) AS drivers,
+            MIN(l.lap_ms) AS best_ms
         FROM sessions s LEFT JOIN laps l ON l.session_id = s.id
         GROUP BY s.id {having}
         ORDER BY s.id DESC LIMIT ?
